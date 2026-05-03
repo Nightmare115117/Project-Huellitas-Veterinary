@@ -305,7 +305,7 @@ function MainMenu() {
       fetch(`http://${getApiBaseHost()}:8080/tratamiento/usuario/${encodeURIComponent(correo)}/${mascotaSeleccionadaObj.idMascota}`)
       .then(res => res.json())
       .then(data => setTratamientos(data))
-      .catch(err => console.log(err));
+      .catch(err => console.error(err));
     }
   }, [correo, mascotaSeleccionadaObj]);
 
