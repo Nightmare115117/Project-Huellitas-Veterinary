@@ -58,6 +58,15 @@ public class CitaModel {
     public CitaModel(){
     }
 
+    public CitaModel(MascotaModel mascota, UsuarioModel usuario, LocalDate fecha, LocalTime entradaAgendada,
+            int estadoCita) {
+        this.mascotaModel = mascota;
+        this.usuarioMascota = usuario;
+        this.fecha = fecha;
+        this.entradaAgendada = entradaAgendada;
+        this.estadoCita = estadoCita;
+    }
+
     public int getIdCita(){
         return idCita;
     }

@@ -27,7 +27,12 @@ public class CitaService {
         cita.setHoraSalida(citaM.getHoraSalida());
         cita.setIdCita(citaM.getIdCita());
         cita.setFecha(citaM.getFecha());
-        cita.setNombreVeterinario(citaM.getUsuarioVeterinario().getNombre() + citaM.getUsuarioVeterinario().getPaterno());
+        // Verificar si el veterinario existe antes de acceder
+        if (citaM.getUsuarioVeterinario() != null) {
+            cita.setNombreVeterinario(citaM.getUsuarioVeterinario().getNombre() + " " + citaM.getUsuarioVeterinario().getPaterno());
+        } else {
+            cita.setNombreVeterinario("Pendiente de asignación");
+        }
         return cita;
     }
 
@@ -80,6 +85,24 @@ public class CitaService {
             } else {
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Mascota no encontrada");
             }    
+        } else {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado");
+        }
+    }
+
+    public CitaDTO createCita(CitaDTO citaDTO){
+        Optional<UsuarioModel> usuarioOpt = usuarioRepository.findByCorreo(citaDTO.getCorreoCliente());
+        if (usuarioOpt.isPresent()) {
+            UsuarioModel usuario = usuarioOpt.get();
+            Optional<MascotaModel> mascotaOpt = mascotaRepository.findById(citaDTO.getIdMascota());
+            if (mascotaOpt.isPresent()) {
+                MascotaModel mascota = mascotaOpt.get();
+                CitaModel cita = new CitaModel(mascota, usuario, citaDTO.getFecha(), citaDTO.getEntradaAgendada(), citaDTO.getEstadoCita());
+                citaRepository.save(cita);
+                return convertirADTO(cita);
+            } else {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Mascota no encontrada");
+            }
         } else {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado");
         }

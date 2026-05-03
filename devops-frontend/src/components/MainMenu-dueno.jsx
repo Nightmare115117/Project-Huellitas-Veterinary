@@ -39,6 +39,7 @@ const TablaCitas = ({ citas }) => {
                   }`}>
                     {cita.estadoCita === 2 ? "Completado" 
                     : cita.estadoCita === 1 ? "Pendiente" 
+                    : cita.estadoCita === 0 ? "Asignacion Pendiente"
                     : "Cancelado"}
                   </span>
                 </td>
@@ -138,7 +139,7 @@ function MainMenu() {
   const [activeItem, setActiveItem] = useState("");
   const [mascotas, setMascotas] = useState([]);
   const [selectedMascota, setSelectedMascota] = useState("");
-  const [_selectedMascotaCita, setSelectedMascotaCita] = useState("");
+  const [selectedMascotaCita, setSelectedMascotaCita] = useState("");
   const [ListaCitas, setCitas] = useState([]);
   const correo = sessionStorage.getItem("Usuario")?.replace(/^"|"$/g, "");
   const menuItems = ["Mascotas", "Citas", "Tratamientos"];
@@ -151,6 +152,8 @@ function MainMenu() {
   const [mostrarFormCita, setMostrarFormCita] = useState(false);
   const [fechaCita, setFechaCita] = useState(null);
   const [horaCita, setHoraCita] = useState(null);
+  const [refreshCitas, setRefreshCitas] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleLogout = () => {
     Swal.fire({
@@ -249,7 +252,7 @@ function MainMenu() {
       .then((data) => setCitas(data))
       .catch((err) => console.error("Error en cita API:", err));
   
-  }, [correo, mascotaSeleccionadaObj]);
+  }, [correo, mascotaSeleccionadaObj, refreshCitas]);
 
   useEffect(() => {
     if (!correo) return;
@@ -305,6 +308,76 @@ function MainMenu() {
       .catch(err => console.log(err));
     }
   }, [correo, mascotaSeleccionadaObj]);
+
+  async function crearCita() {
+    // Validar que los campos no estén vacíos
+    if (!selectedMascotaCita || !fechaCita || !horaCita) {
+      Swal.fire({
+        title: "Campos incompletos",
+        text: "Por favor selecciona una mascota, fecha y hora para la cita.",
+        icon: "warning"
+      });
+      return;
+    }
+
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+    // Formatear fecha y hora para el backend
+    const fechaFormateada = fechaCita.format('YYYY-MM-DD');      // ej: "2026-05-02"
+    const horaFormateada = horaCita.format('HH:mm:ss');          // ej: "20:00:00"
+  
+    const response = await fetch(`http://${getApiBaseHost()}:8080/cita/crear`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        correoCliente: correo,
+        idMascota: selectedMascotaCita,          // ← asegúrate de usar el estado correcto (el del modal)
+        fecha: fechaFormateada,
+        entradaAgendada: horaFormateada,
+      })
+    });
+    const data = await response.json();
+    console.log(data);
+    if (response.ok) {
+      Swal.fire({
+        title: "Cita creada con éxito",
+        text: "La cita ha sido creada con éxito",
+        icon: "success"
+      });
+      setMostrarFormCita(false);
+      setFechaCita(null);
+      setHoraCita(null);
+      setSelectedMascotaCita("");
+      setRefreshCitas(prev => prev + 1);
+      // Recargar las citas para mostrar la nueva
+      // Puedes llamar nuevamente al fetch de citas o simplemente recargar la lista
+      // Por simplicidad, recarga la página o vuelve a obtener las citas:
+      //window.location.reload(); // o mejor: dispara un useEffect que dependa de una variable de recarga
+    } else {
+      Swal.fire({
+        title: "Error al crear la cita",
+        text: data.message || "Por favor, intente nuevamente",
+        icon: "error"
+      });
+      setMostrarFormCita(false);
+      setFechaCita(null);
+      setHoraCita(null);
+      setSelectedMascotaCita("");
+    }
+    } catch (error) {
+      console.error("Error al crear la cita:", error);
+      Swal.fire({
+        title: "Error al crear la cita",
+        text: error.message || "Por favor, intente nuevamente",
+        icon: "error"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
 
   return (
     <>
@@ -453,7 +526,7 @@ function MainMenu() {
                   <InputLabel id="select-mascota-label">Crear Cita para:</InputLabel>
                   <Select
                       labelId="select-mascota-label"
-                      value={selectedMascota}
+                      value={selectedMascotaCita}
                       label="Filtrar por Mascota"
                       onChange={(e) => setSelectedMascotaCita(e.target.value)}
                   >
@@ -464,26 +537,31 @@ function MainMenu() {
                   </Select>
               
                   <LocalizationProvider dateAdapter={AdapterDayjs}>
-                      <p>
+                      <p></p>
                           <DatePicker
                               label="Fecha de la cita"
                               value={fechaCita}
                               onChange={(newValue) => setFechaCita(newValue)}
                           />
-                      </p>
-                      <p>
+                      <p></p>
                           <TimePicker
                               label="Hora de entrada"
                               value={horaCita}
                               onChange={(newValue) => setHoraCita(newValue)}
                           />
-                      </p>
+                      <p></p>
                   </LocalizationProvider>
                 </FormControl>
 
                 <div style={{ display: "flex", gap: "10px", marginTop: "20px" }}>
                     <button onClick={() => {setMostrarFormCita(false); setFechaCita(null); setHoraCita(null); setSelectedMascotaCita("")}}>Cancelar</button>
-                    <button>Guardar</button>
+                    <button 
+                      type="button"
+                      onClick={crearCita} 
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? "Guardando..." : "Guardar"}
+                    </button>
                 </div>
             </div>
         </div>
