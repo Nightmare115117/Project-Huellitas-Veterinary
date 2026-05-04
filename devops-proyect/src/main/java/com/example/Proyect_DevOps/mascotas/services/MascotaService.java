@@ -25,14 +25,13 @@ public class MascotaService {
     private UsuarioRepository user;
 
     public MascotaDTO convertirADTO(MascotaModel mascota) {
-        MascotaDTO dto = new MascotaDTO();
-        dto.setIdMascota(mascota.getIdMascota());
-        dto.setNombre(mascota.getNombre());
-        dto.setFechaNacimiento(mascota.getFechaNacimiento());
-        dto.setPeso(mascota.getPeso());
-        dto.setStatus(mascota.getStatus());
-        dto.setRaza(mascota.getRaza());
-        return dto;
+        return new MascotaDTO(
+            mascota.getIdMascota(),
+            mascota.getNombre(),
+            mascota.getFechaNacimiento(),
+            mascota.getPeso(),
+            mascota.getStatus(),
+            mascota.getRaza());
     }
 
     public List<MascotaDTO> getAllMascotaByUser(String correo){
