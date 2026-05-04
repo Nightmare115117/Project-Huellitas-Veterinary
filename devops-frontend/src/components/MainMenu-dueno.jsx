@@ -183,10 +183,10 @@ function MainMenu() {
         timerProgressBar: true,
         showConfirmButton: false  
       }).then(() => {
-        navigates("/");
+        navigate("/");
       });
     }
-  }, [correo, navigate]);
+  }, [correo]);
 
   useEffect(() => {
     if (!correo) return;
