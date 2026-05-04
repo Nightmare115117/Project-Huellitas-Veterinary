@@ -20,20 +20,20 @@ import com.example.Proyect_DevOps.users.repositories.UsuarioRepository;
 @Service
 public class CitaService {
 
-    private CitaDTO convertirADTO (CitaModel citaM){
-        CitaDTO cita = new CitaDTO();
-        cita.setEntradaAgendada(citaM.getEntradaAgendada());
-        cita.setEstadoCita(citaM.getEstadoCita());
-        cita.setHoraSalida(citaM.getHoraSalida());
-        cita.setIdCita(citaM.getIdCita());
-        cita.setFecha(citaM.getFecha());
-        // Verificar si el veterinario existe antes de acceder
-        if (citaM.getUsuarioVeterinario() != null) {
-            cita.setNombreVeterinario(citaM.getUsuarioVeterinario().getNombre() + " " + citaM.getUsuarioVeterinario().getPaterno());
-        } else {
-            cita.setNombreVeterinario("Pendiente de asignación");
-        }
-        return cita;
+    private CitaDTO convertirADTO(CitaModel citaM) {
+        String nombreVeterinario =
+            citaM.getUsuarioVeterinario() != null
+                ? citaM.getUsuarioVeterinario().getNombre() + " " + citaM.getUsuarioVeterinario().getPaterno()
+                : "Pendiente de asignación";
+        return new CitaDTO(
+            citaM.getIdCita(),
+            nombreVeterinario,
+            citaM.getUsuarioMascota().getCorreo(),
+            citaM.getMascotaModel().getIdMascota(),
+            citaM.getFecha(),
+            citaM.getEntradaAgendada(),
+            citaM.getHoraSalida(),
+            citaM.getEstadoCita());
     }
 
     @Autowired
@@ -91,13 +91,13 @@ public class CitaService {
     }
 
     public CitaDTO createCita(CitaDTO citaDTO){
-        Optional<UsuarioModel> usuarioOpt = usuarioRepository.findByCorreo(citaDTO.getCorreoCliente());
+        Optional<UsuarioModel> usuarioOpt = usuarioRepository.findByCorreo(citaDTO.correoCliente());
         if (usuarioOpt.isPresent()) {
             UsuarioModel usuario = usuarioOpt.get();
-            Optional<MascotaModel> mascotaOpt = mascotaRepository.findById(citaDTO.getIdMascota());
+            Optional<MascotaModel> mascotaOpt = mascotaRepository.findById(citaDTO.idMascota());
             if (mascotaOpt.isPresent()) {
                 MascotaModel mascota = mascotaOpt.get();
-                CitaModel cita = new CitaModel(mascota, usuario, citaDTO.getFecha(), citaDTO.getEntradaAgendada(), citaDTO.getEstadoCita());
+                CitaModel cita = new CitaModel(mascota, usuario, citaDTO.fecha(), citaDTO.entradaAgendada(), citaDTO.estadoCita());
                 citaRepository.save(cita);
                 return convertirADTO(cita);
             } else {

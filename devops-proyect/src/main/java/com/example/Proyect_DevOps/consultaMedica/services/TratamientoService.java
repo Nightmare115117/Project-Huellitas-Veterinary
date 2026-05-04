@@ -17,23 +17,22 @@ public class TratamientoService {
     @Autowired
     private TratamientoRepository tratamientoRepository;
 
-    private TratamientoDTO convertirADTO(TratamientoModel tratamiento){
-        TratamientoDTO tratamientoDTO = new TratamientoDTO();
-        tratamientoDTO.setIdTratamiento(tratamiento.getIdTratamiento());
-        tratamientoDTO.setCosto(tratamiento.getCosto());
-        tratamientoDTO.setDescripcion(tratamiento.getDescripcion());
-        tratamientoDTO.setEstatus(tratamiento.getStatus());
-        tratamientoDTO.setMedicamento(tratamiento.getMedicamento());
-        return tratamientoDTO;
+    private TratamientoDTO convertirADTO(TratamientoModel tratamiento, String mascotaNombre) {
+        return new TratamientoDTO(
+            tratamiento.getIdTratamiento(),
+            tratamiento.getMedicamento(),
+            tratamiento.getDescripcion(),
+            tratamiento.getCosto(),
+            tratamiento.getStatus(),
+            mascotaNombre);
     }
 
     public List<TratamientoDTO> mostrarTratamientosPorUsuario(String correo){
         List<TratamientoDTO> listaDTO = new ArrayList<>();
         for (TratamientoModel tratamiento : tratamientoRepository.findByconsultas_cita_usuarioMascota_correo(correo)) {
             for (ConsultaMedicaModel consulta : tratamiento.getListaConsultas()) {
-                TratamientoDTO dto = convertirADTO(tratamiento);
-                dto.setMascotaNombre(consulta.getCita().getMascotaModel().getNombre());
-                listaDTO.add(dto);
+                listaDTO.add(convertirADTO(tratamiento,
+                    consulta.getCita().getMascotaModel().getNombre()));
             }
         }
         return listaDTO;
@@ -43,9 +42,8 @@ public class TratamientoService {
         List<TratamientoDTO> listaDTO = new ArrayList<>();
         for (TratamientoModel tratamiento : tratamientoRepository.findByconsultas_cita_usuarioMascota_correoAndConsultas_cita_mascotaModel_idMascota(correo, idMascota)) {
             for (ConsultaMedicaModel consulta : tratamiento.getListaConsultas()) {
-                TratamientoDTO dto = convertirADTO(tratamiento);
-                dto.setMascotaNombre(consulta.getCita().getMascotaModel().getNombre());
-                listaDTO.add(dto);
+                listaDTO.add(convertirADTO(tratamiento,
+                    consulta.getCita().getMascotaModel().getNombre()));
             }
         }
         return listaDTO;

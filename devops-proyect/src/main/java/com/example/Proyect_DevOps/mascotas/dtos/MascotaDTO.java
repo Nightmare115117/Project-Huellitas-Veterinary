@@ -4,16 +4,11 @@ import java.time.LocalDate;
 
 import com.example.Proyect_DevOps.mascotas.models.RazaModel;
 
-import lombok.Data;
-
-@Data
-public class MascotaDTO {
-
-    private int idMascota;
-    private String nombre;
-    private LocalDate fechaNacimiento;
-    private double peso;
-    private int status;
-    private RazaModel raza;
-
+public record MascotaDTO(
+    int idMascota,
+    String nombre,
+    LocalDate fechaNacimiento,
+    double peso,
+    int status,
+    RazaModel raza) {
 }
