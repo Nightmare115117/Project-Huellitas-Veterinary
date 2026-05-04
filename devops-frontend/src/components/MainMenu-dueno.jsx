@@ -153,6 +153,7 @@ function MainMenu() {
   const [fechaCita, setFechaCita] = useState(null);
   const [horaCita, setHoraCita] = useState(null);
   const [refreshCitas, setRefreshCitas] = useState(0);
+  const [isClosingModal, setIsClosingModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleLogout = () => {
@@ -379,6 +380,17 @@ function MainMenu() {
     }
   }
 
+  const closeModal = () => {
+    setIsClosingModal(true);
+    setTimeout(() => {
+      setMostrarFormCita(false);
+      setIsClosingModal(false);
+      setFechaCita(null);
+      setHoraCita(null);
+      setSelectedMascotaCita("");
+    }, 300); // debe coincidir con la duración de la animación
+  };
+
   return (
     <>
       <div className="main-menu" style={{ display: "flex" }}>
@@ -519,7 +531,10 @@ function MainMenu() {
                 backgroundColor: "white",
                 padding: "30px",
                 borderRadius: "10px",
-                width: "400px"
+                width: "400px",
+                animation: isClosingModal
+                  ? "modalSalida 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards"
+                  : "modalEntrada 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards"
             }}>
                 <h3>Crear Cita</h3>
                 <FormControl fullWidth sx={{ m: 1, minWidth: 200 }}>
@@ -554,11 +569,12 @@ function MainMenu() {
                 </FormControl>
 
                 <div style={{ display: "flex", gap: "10px", marginTop: "20px" }}>
-                    <button onClick={() => {setMostrarFormCita(false); setFechaCita(null); setHoraCita(null); setSelectedMascotaCita("")}}>Cancelar</button>
+                    <button className="btnCancelar" onClick={() => {closeModal()}}>Cancelar</button>
                     <button 
                       type="button"
                       onClick={crearCita} 
                       disabled={isSubmitting}
+                      className="btnCrear"
                     >
                       {isSubmitting ? "Guardando..." : "Guardar"}
                     </button>
