@@ -20,7 +20,8 @@ devops-frontend/*.ntvs*
 devops-frontend/*.njsproj
 devops-frontend/*.sln
 devops-frontend/*.sw?
-
+devops-frontend/Dockerfile
+devops-frontend/.dockerignore
 devops-proyect/target/
 devops-proyect/.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
@@ -35,3 +36,7 @@ devops-proyect/*.njsproj
 devops-proyect/*.sln
 devops-proyect/*.sw?
 devops-proyect/src/main/resources/application.properties
+devops-proyect/Dockerfile
+
+devops-database
+devops-database/Dockerfile

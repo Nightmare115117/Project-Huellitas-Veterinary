@@ -56,7 +56,6 @@ public class UsuarioService {
         Optional<UsuarioModel> usuarioOpt = usuarioRepository.findByCorreo(correo);
         if (usuarioOpt.isPresent()){
             UsuarioModel usuario = usuarioOpt.get();
-            System.out.println(usuario.getRol().getIdRol());
             return usuario.getRol().getIdRol();
         } else {
             return -1;

@@ -29,7 +29,6 @@ public class MascotaService {
             mascota.getIdMascota(),
             mascota.getNombre(),
             mascota.getFechaNacimiento(),
-            mascota.getPeso(),
             mascota.getStatus(),
             mascota.getRaza());
     }

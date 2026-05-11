@@ -8,7 +8,6 @@ public record MascotaDTO(
     int idMascota,
     String nombre,
     LocalDate fechaNacimiento,
-    double peso,
     int status,
     RazaModel raza) {
 }

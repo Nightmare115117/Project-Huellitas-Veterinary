@@ -21,7 +21,6 @@ public class MascotaModel {
     private int idMascota;
     private String nombre;
     private LocalDate fechaNacimiento;
-    private double peso;
     private int status;
 
     @ManyToOne
@@ -39,7 +38,6 @@ public class MascotaModel {
     public MascotaModel(String nombre, LocalDate fechaNacimiento, double peso, int status, RazaModel raza, SucursalModel sucursal, UsuarioModel usuario) {
         this.nombre = nombre;
         this.fechaNacimiento = fechaNacimiento;
-        this.peso = peso;
         this.status = status;
         this.raza = raza;
         this.sucursal = sucursal;
@@ -71,14 +69,6 @@ public class MascotaModel {
     
     public void setFechaNacimiento(LocalDate fechaNacimiento) {
         this.fechaNacimiento = fechaNacimiento;
-    }
-    
-    public double getPeso() {
-        return peso;
-    }
-    
-    public void setPeso(double peso) {
-        this.peso = peso;
     }
     
     public int getStatus() {
@@ -115,8 +105,8 @@ public class MascotaModel {
 
     @Override
     public String toString() {
-        return "idMascota=" + idMascota + ", nombre=" + nombre + ", fechaNacimiento=" + fechaNacimiento + 
-        ", peso=" + peso + ", status=" + status + ", raza=" + raza.getIdRaza() + ", sucursal=" + sucursal.getIdSucursal() + 
+        return "idMascota=" + idMascota + ", nombre=" + nombre + ", fechaNacimiento=" + fechaNacimiento
+        + ", status=" + status + ", raza=" + raza.getIdRaza() + ", sucursal=" + sucursal.getIdSucursal() + 
         ", usuario=" + usuario.getIdUsuario();
     }   
 }
