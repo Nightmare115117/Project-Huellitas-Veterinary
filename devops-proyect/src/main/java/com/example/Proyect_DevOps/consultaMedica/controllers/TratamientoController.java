@@ -23,7 +23,7 @@ public class TratamientoController {
         return tratamientoService.mostrarTratamientosPorUsuario(correo);
     }
 
-    @GetMapping("/{correo:.+}")
+    @GetMapping("/contar/{correo:.+}")
     public long contarTratamientosIncompletos(@PathVariable String correo) {
         return tratamientoService.contarTratamientosIncompletos(correo);
     }

@@ -107,4 +107,15 @@ public class CitaService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado");
         }
     }
+
+    public boolean cancelarCita (int idCita) {
+        CitaModel cita = citaRepository.findById(idCita).orElseThrow(()-> new RuntimeException("El id de la cita no fue encontrado: " + idCita));
+        try {
+            cita.setEstadoCita(3);
+            citaRepository.save(cita);
+            return true;
+        } catch (Exception  e) {
+            return false;
+        }
+    }
 }

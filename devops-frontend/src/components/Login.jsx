@@ -85,7 +85,7 @@ function Login() {
             }
           }
         });
-        fetch(`http://${getApiBaseHost()}:8080/usuario/getRol?correo=${user}`)
+        fetch(`http://${getApiBaseHost()}:8080/usuario/Rol?correo=${user}`)
         .then(res => res.json())
         .then(data => {
           if (data === 2) {
