@@ -40,3 +40,9 @@ devops-proyect/Dockerfile
 
 devops-database
 devops-database/Dockerfile
+
+devops-gateway/HELP.md
+devops-gateway/target/
+devops-gateway/.mvn/wrapper/maven-wrapper.jar
+devops-gateway/!**/src/main/**/target/
+devops-gateway/!**/src/test/**/target/

@@ -1,0 +1,5 @@
+devops-gateway/mvnw text eol=lf
+devops-gateway/*.cmd text eol=crlf
+
+devops-proyect/mvnw text eol=lf
+devops-proyect/*.cmd text eol=crlf
