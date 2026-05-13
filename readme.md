@@ -51,6 +51,7 @@ chmod +x scripts/backup.fish
 
 # 2. Ejecutarlo
 
+cd scripts/
 ./backup.fish
 
 # NOTA: el proyecto se va a ejecutar apenas se instale, para detenerlo usar los siguientes comandos:
