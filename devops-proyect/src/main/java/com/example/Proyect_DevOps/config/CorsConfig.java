@@ -15,7 +15,7 @@ public class CorsConfig {
             @Override
             public void addCorsMappings(@NonNull CorsRegistry registry) {
                 registry.addMapping("/**")
-                        .allowedOriginPatterns("http://dev-server.local:5173", "http://*.local:5173", "http://localhost:5173", "http://localhost:8080")   // Permite cualquier origen
+                        .allowedOriginPatterns("*")   // Permite cualquier origen
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
                         .allowCredentials(true);      // Si necesitas enviar cookies/tokens
