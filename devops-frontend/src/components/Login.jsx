@@ -59,7 +59,7 @@ function Login() {
     }
   
     try {
-      const response = await fetch(`http://${getApiBaseHost()}:8080/usuario/login`, {
+      const response = await fetch(`/api/usuario/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -85,7 +85,7 @@ function Login() {
             }
           }
         });
-        fetch(`http://${getApiBaseHost()}:8080/usuario/getRol?correo=${user}`)
+        fetch(`/api/usuario/Rol?correo=${user}`)
         .then(res => res.json())
         .then(data => {
           if (data === 2) {

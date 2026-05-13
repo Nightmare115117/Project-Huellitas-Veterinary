@@ -1,0 +1,114 @@
+name: CI - Huellitas Veterinary
+
+on:
+  pull_request:
+    branches: [main, master]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  JAVA_VERSION: '21'
+  NODE_VERSION: '24'
+
+jobs:
+
+  # ─────────────────────────────────────────
+  # JOB 1: Backend - Spring Boot (Java 21)
+  # ─────────────────────────────────────────
+  backend:
+    name: 🔧 Build Backend
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    services:
+      mariadb:
+        image: mariadb:11
+        env:
+          MARIADB_ROOT_PASSWORD: ${{ secrets.DB_ROOT_PASSWORD }}
+          MARIADB_DATABASE: huellitas_db
+          MARIADB_USER: ${{ secrets.DB_USER }}
+          MARIADB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mariadb-admin ping -h 127.0.0.1 --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+          --health-start-period=30s
+
+    defaults:
+      run:
+        working-directory: devops-proyect
+
+    steps:
+      - name: 📥 Checkout del código
+        uses: actions/checkout@v4
+
+      - name: ☕ Configurar Java ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: 📦 Instalar dependencias y compilar
+        run: mvn clean install -DskipTests
+
+      - name: 🧪 Ejecutar tests
+        run: mvn test
+        env:
+          SPRING_DATASOURCE_URL: jdbc:mariadb://localhost:3306/huellitas_db
+          SPRING_DATASOURCE_USERNAME: ${{ secrets.DB_USER }}
+          SPRING_DATASOURCE_PASSWORD: ${{ secrets.DB_PASSWORD }}
+
+      - name: 💾 Guardar JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-jar-${{ github.sha }}
+          path: devops-proyect/target/*.jar
+          retention-days: 7
+
+  # ─────────────────────────────────────────
+  # JOB 2: Frontend - React + Vite (Node 24)
+  # ─────────────────────────────────────────
+  frontend:
+    name: 🎨 Build Frontend
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    defaults:
+      run:
+        working-directory: devops-frontend
+
+    steps:
+      - name: 📥 Checkout del código
+        uses: actions/checkout@v4
+
+      - name: 🟢 Configurar Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: devops-frontend/package-lock.json
+
+      - name: 📦 Instalar dependencias
+        run: npm ci
+
+      - name: 🔍 Lint
+        run: npm run lint
+
+      - name: 🏗️ Build del proyecto
+        run: npm run build
+
+      - name: 💾 Guardar build frontend
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist-${{ github.sha }}
+          path: devops-frontend/dist/
+          retention-days: 7

@@ -1,8 +1,10 @@
 # 🐾 Project Huellitas - Sistema de Gestión Veterinaria
 
 [![Java](https://img.shields.io/badge/Java-21-orange)](https://www.java.com/)
+[![Spring-Boot](https://img.shields.io/badge/Spring_boot-orange)](https://spring.io/projects/spring-boot)
 [![JavaScript](https://img.shields.io/badge/JavaScript-ES6-yellow)](https://developer.mozilla.org/)
 [![CSS](https://img.shields.io/badge/CSS-3-blue)](https://www.w3.org/Style/CSS/)
+[![React](https://img.shields.io/badge/React-blue)](https://es.react.dev/)
 [![License](https://img.shields.io/badge/Licencia-MIT-green)](LICENSE)
 [![Status](https://img.shields.io/badge/Estado-En%20Desarrollo-brightgreen)]()
 
@@ -27,7 +29,7 @@
 | Capa | Tecnologías |
 |------|-------------|
 | **Backend** | Java 21 (Spring Boot) |
-| **Frontend** | JavaScript (ES6), HTML5, CSS3 |
+| **Frontend** | JavaScript (ES6), HTML5, CSS3, React |
 | **Seguridad** | Encriptación personalizada, generación de códigos seguros |
 | **Estilos** | CSS moderno con menús laterales dinámicos |
 
@@ -42,21 +44,17 @@
 
 ### Pasos rápidos
 
-```bash
-# 1. Clonar el repositorio
-git clone https://github.com/Nightmare11512/Project-Huellitas-Veterinary.git
+```fish
+# 1. En la carpeta de scripts se descargan las dependencias desde el archivo backup.fish y darle permisos de ejecucion
 
-# 2. Entrar al directorio de Java con Spring
-cd Project-Huellitas-Veterinary/devops-proyect
+chmod +x scripts/backup.fish
 
-#3. Correr maven con Spring Boot
-./mvnw spring-boot:run
+# 2. Ejecutarlo
 
-#4. Entrar al directorio donde esta el frontend
-cd ..
-cd Project-Huellitas-Veterinary/devops-frontend
+./backup.fish
 
-#5. Correr el frontend  (en caso de correrlo para que la red local pueda acceder)
-npm run dev --  --host 
-# o en caso de solo acceder con el localhost
-npm run dev
+# NOTA: el proyecto se va a ejecutar apenas se instale, para detenerlo usar los siguientes comandos:
+
+pkill -f "spring-boot" 2>/dev/null
+pkill -f "node" 2>/dev/null
+pkill -f "npm" 2>/dev/null
