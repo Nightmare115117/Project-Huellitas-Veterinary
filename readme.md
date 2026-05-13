@@ -1,12 +1,12 @@
 # 🐾 Project Huellitas - Sistema de Gestión Veterinaria
 
-[![Java](https://img.shields.io/badge/Java-21-orange)](https://www.java.com/)
-[![Spring-Boot](https://img.shields.io/badge/Spring_boot-orange)](https://spring.io/projects/spring-boot)
-[![JavaScript](https://img.shields.io/badge/JavaScript-ES6-yellow)](https://developer.mozilla.org/)
-[![CSS](https://img.shields.io/badge/CSS-3-blue)](https://www.w3.org/Style/CSS/)
-[![React](https://img.shields.io/badge/React-blue)](https://es.react.dev/)
-[![License](https://img.shields.io/badge/Licencia-MIT-green)](LICENSE)
-[![Status](https://img.shields.io/badge/Estado-En%20Desarrollo-brightgreen)]()
+[Java](https://www.java.com/)
+[Spring-Boot](https://spring.io/projects/spring-boot)
+[JavaScript](https://developer.mozilla.org/)
+[CSS](https://www.w3.org/Style/CSS/)
+[React](https://es.react.dev/)
+[License](LICENSE)
+[Status]()
 
 > **Sistema completo para clínicas veterinarias** - Gestión de pacientes, citas, dueños y recetas con interfaz moderna y segura.
 
@@ -26,18 +26,21 @@
 
 ## 🚀 Tecnologías utilizadas
 
-| Capa | Tecnologías |
-|------|-------------|
-| **Backend** | Java 21 (Spring Boot) |
-| **Frontend** | JavaScript (ES6), HTML5, CSS3, React |
+
+| Capa          | Tecnologías                                               |
+| ------------- | --------------------------------------------------------- |
+| **Backend**   | Java 21 (Spring Boot)                                     |
+| **Frontend**  | JavaScript (ES6), HTML5, CSS3, React                      |
 | **Seguridad** | Encriptación personalizada, generación de códigos seguros |
-| **Estilos** | CSS moderno con menús laterales dinámicos |
+| **Estilos**   | CSS moderno con menús laterales dinámicos                 |
+
 
 ---
 
 ## 📦 Instalación y ejecución
 
 ### Requisitos previos
+
 - Java 21
 - Navegador web moderno (Chrome, Firefox, Edge)
 - (Opcional) Git
@@ -59,3 +62,5 @@ cd scripts/
 pkill -f "spring-boot" 2>/dev/null
 pkill -f "node" 2>/dev/null
 pkill -f "npm" 2>/dev/null
+```
+
