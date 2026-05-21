@@ -22,6 +22,8 @@ devops-frontend/*.sln
 devops-frontend/*.sw?
 devops-frontend/Dockerfile
 devops-frontend/.dockerignore
+devops-frontend/nginx.conf
+
 devops-proyect/target/
 devops-proyect/.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
