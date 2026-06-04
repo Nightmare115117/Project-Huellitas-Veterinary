@@ -35,7 +35,10 @@ public class UsuarioController {
         if (valido) {
             return ResponseEntity.ok(Map.of("mensaje", "Login Exitoso", "login", true));
         } else {
-            return ResponseEntity.status(401).body("Credenciales incorrectas");
+             return ResponseEntity.status(401).body(Map.of(
+            "success", false,
+            "mensaje", "Credenciales incorrectas"
+        ));
         }
     }
 
