@@ -1,0 +1,72 @@
+name: Deploy AWS
+
+on: 
+  push: 
+    branches: main
+
+jobs: 
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configurar SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/Dev-Server.pem
+          chmod 400 ~/.ssh/Dev-Server.pem
+          ssh-keyscan ${{ secrets.SSH_IP }} >> ~/.ssh/known_hosts
+
+      - name: Clone Repo
+        run: |
+          ssh -i ~/.ssh/Dev-Server.pem ${{ secrets.SSH_HOST_NAME}}@${{ secrets.SSH_IP }} "
+            cd ~/app &&
+            git pull https://github.com/Nightmare11512/Project-Huellitas-Veterinary.git
+          "
+
+      - name : Install dependencias
+        run:  |
+          ssh -i ~/.ssh/Dev-Server.pem ${{ secrets.SSH_HOST_NAME}}@${{ secrets.SSH_IP }} "
+          cd ·~/app/Project-Huellitas-Veterinary/devops-frontend &&
+          npm install &&
+          npm run build
+          "
+
+      - name : Hacer Imagen de Docker (Frontend)
+        run: |
+          ssh -i ~/.ssh/Dev-Server.pem ${{ secrets.SSH_HOST_NAME}}@${{ secrets.SSH_IP }} "
+          cd ~/app/Project-Huellitas-Veterinary/devops-frontend &&
+          docker build -t frontend:1.0 .
+          "
+
+      - name : Compilar el Backend
+        run: |
+          ssh -i ~/.ssh/Dev-Server.pem ${{ secrets.SSH_HOST_NAME}}@${{ secrets.SSH_IP }} "
+          cd ~/app/Project-Huellitas-Veterinary/devops-proyect &&
+          ./mvnw clean package -DskipTests
+          "
+
+      - name : Hacer Imagen de Docker (Backend)
+        run: |
+          ssh -i ~/.ssh/Dev-Server.pem ${{ secrets.SSH_HOST_NAME}}@${{ secrets.SSH_IP }} "
+          cd ~/app/Project-Huellitas-Veterinary/devops-proyect &&
+          docker build -t backend:1.0 .
+          "
+        
+      - name: Aplicar Kubernetes
+        run: |
+          ssh -i ~/.ssh/Dev-Server.pem ${{ secrets.SSH_HOST_NAME }}@${{ secrets.SSH_IP }} "
+            cd ~/app/Project-Huellitas-Veterinary/k8s &&
+            kubectl apply -f mariadb-deployment.yml &&
+            kubectl apply -f backend-deployment.yml &&
+            kubectl apply -f frontend-deployment.yml
+          "
+
+      - name: Reiniciar deployments
+        run: |
+          ssh -i ~/.ssh/Dev-Server.pem ${{ secrets.SSH_HOST_NAME }}@${{ secrets.SSH_IP }} "
+            kubectl rollout restart deployment/frontend &&
+            kubectl rollout restart deployment/backend &&
+            kubectl rollout restart deployment/mariadb
+          "
