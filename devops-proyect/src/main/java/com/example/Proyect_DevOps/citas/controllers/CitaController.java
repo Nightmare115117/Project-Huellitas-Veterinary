@@ -21,7 +21,7 @@ import com.example.Proyect_DevOps.citas.services.CitaService;
 @RestController
 @RequestMapping("/cita")
 public class CitaController {
-
+    //XD
     @Autowired
     private CitaService citaService;
 
