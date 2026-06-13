@@ -28,7 +28,8 @@ jobs:
       - name : Install dependencias
         run:  |
           ssh -i ~/.ssh/Dev-Server.pem ${{ secrets.SSH_HOST_NAME}}@${{ secrets.SSH_IP }} "
-          export PATH=$PATH:/usr/local/bin &&
+          export NVM_DIR=\$HOME/.nvm &&
+          source \$NVM_DIR/nvm.sh &&
           cd ~/app/Project-Huellitas-Veterinary/devops-frontend &&
           npm install &&
           npm run build
