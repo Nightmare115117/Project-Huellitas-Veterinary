@@ -56,6 +56,14 @@ jobs:
           docker build -t backend:1.0 .
           "
         
+      - name: Importar imagenes a K3s
+        run: |
+          ssh -i ~/.ssh/Dev-Server.pem ${{ secrets.SSH_HOST_NAME }}@${{ secrets.SSH_IP }} "
+            export KUBECONFIG=~/.kube/config &&
+            docker save frontend:1.0 | sudo k3s ctr images import - &&
+            docker save backend:1.0 | sudo k3s ctr images import -
+          "
+
       - name: Aplicar Kubernetes
         run: |
           ssh -i ~/.ssh/Dev-Server.pem ${{ secrets.SSH_HOST_NAME }}@${{ secrets.SSH_IP }} "
