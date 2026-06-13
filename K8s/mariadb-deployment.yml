@@ -21,14 +21,14 @@ spec:
             - name: MYSQL_ROOT_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: app-secrets
+                  name: huellitas-secrets
                   key: DB_ROOT_PASSWORD
             - name: MYSQL_DATABASE
               value: huellitas_db
             - name: MYSQL_USER
               valueFrom:
                 secretKeyRef:
-                  name: app-secrets
+                  name: huellitas-secrets
                   key: DB_USER
             - name: MYSQL_PASSWORD
               valueFrom:
