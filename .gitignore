@@ -36,7 +36,6 @@ devops-proyect/*.njsproj
 devops-proyect/*.sln
 devops-proyect/*.sw?
 devops-proyect/src/main/resources/application.properties
-devops-proyect/Dockerfile
 
 devops-database
 devops-database/Dockerfile
