@@ -59,6 +59,7 @@ jobs:
       - name: Aplicar Kubernetes
         run: |
           ssh -i ~/.ssh/Dev-Server.pem ${{ secrets.SSH_HOST_NAME }}@${{ secrets.SSH_IP }} "
+            export KUBECONFIG=~/.kube/config &&
             cd ~/app/Project-Huellitas-Veterinary/K8s &&
             kubectl apply -f mariadb-deployment.yml &&
             kubectl apply -f backend-deployment.yml &&
@@ -68,6 +69,7 @@ jobs:
       - name: Reiniciar deployments
         run: |
           ssh -i ~/.ssh/Dev-Server.pem ${{ secrets.SSH_HOST_NAME }}@${{ secrets.SSH_IP }} "
+            export KUBECONFIG=~/.kube/config &&
             kubectl rollout restart deployment/frontend &&
             kubectl rollout restart deployment/backend &&
             kubectl rollout restart deployment/mariadb
