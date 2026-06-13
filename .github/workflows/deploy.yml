@@ -59,7 +59,7 @@ jobs:
       - name: Aplicar Kubernetes
         run: |
           ssh -i ~/.ssh/Dev-Server.pem ${{ secrets.SSH_HOST_NAME }}@${{ secrets.SSH_IP }} "
-            cd ~/app/Project-Huellitas-Veterinary/k8s &&
+            cd ~/app/Project-Huellitas-Veterinary/K8s &&
             kubectl apply -f mariadb-deployment.yml &&
             kubectl apply -f backend-deployment.yml &&
             kubectl apply -f frontend-deployment.yml
