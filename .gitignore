@@ -20,7 +20,6 @@ devops-frontend/*.ntvs*
 devops-frontend/*.njsproj
 devops-frontend/*.sln
 devops-frontend/*.sw?
-devops-frontend/dist.zip
 
 devops-proyect/target/
 devops-proyect/.mvn/wrapper/maven-wrapper.jar
