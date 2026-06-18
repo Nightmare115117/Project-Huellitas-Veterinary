@@ -15,6 +15,7 @@ import com.example.Proyect_DevOps.consultaMedica.services.TratamientoService;
 @RequestMapping("/tratamiento")
 public class TratamientoController {
 
+    
     @Autowired
     private TratamientoService tratamientoService;
 
