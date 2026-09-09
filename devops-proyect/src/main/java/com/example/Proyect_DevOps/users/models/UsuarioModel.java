@@ -22,6 +22,8 @@ public class UsuarioModel {
 
     @Column(nullable = false, unique = true)
     private String correo;
+    @Column(nullable = false, unique = true)
+    private String correoHMAC;
     @Column(nullable = false)
     private String contraseña;
 
@@ -81,6 +83,14 @@ public class UsuarioModel {
         this.correo = correo;
     }
 
+    public String getCorreoHMAC() {
+        return correoHMAC;
+    }
+
+    public void setCorreoHMAC(String correoHMAC) {
+        this.correoHMAC = correoHMAC;
+    }
+
     public String getContraseña() {
         return contraseña;
     }
@@ -95,10 +105,5 @@ public class UsuarioModel {
     
     public void setRol(RolModel rol) {
         this.rol = rol;
-    }
-    
-    @Override
-    public String toString() {
-        return "idUsuario=" + idUsuario + ", nombre=" + nombre + ", paterno=" + paterno + ", materno=" + materno + ", correo=" + correo + ", contraseña=" + contraseña + ", rol=" + rol.getIdRol();
     }
 }

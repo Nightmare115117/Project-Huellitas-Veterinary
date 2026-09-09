@@ -16,6 +16,7 @@ import com.example.Proyect_DevOps.mascotas.models.MascotaModel;
 import com.example.Proyect_DevOps.mascotas.repositories.MascotaRepository;
 import com.example.Proyect_DevOps.users.models.UsuarioModel;
 import com.example.Proyect_DevOps.users.repositories.UsuarioRepository;
+import com.example.Proyect_DevOps.utilities.HMACUtil;
 
 @Service
 public class CitaService {
@@ -46,7 +47,7 @@ public class CitaService {
     private MascotaRepository mascotaRepository;
 
     public long countByUsuarioCitas (String correo){
-        Optional<UsuarioModel> usuarioOpt = usuarioRepository.findByCorreo(correo);
+        Optional<UsuarioModel> usuarioOpt = usuarioRepository.findByCorreoHMAC(HMACUtil.GenerarHuella(correo));
         if (usuarioOpt.isPresent()) {
             UsuarioModel usuario = usuarioOpt.get();
             return citaRepository.countByUsuarioMascotaAndEstadoCita(usuario, 1);
@@ -56,7 +57,7 @@ public class CitaService {
     }
 
     public List<CitaDTO> getCitasByUser (String correo) {
-        Optional<UsuarioModel> usuarioOpt = usuarioRepository.findByCorreo(correo);
+        Optional<UsuarioModel> usuarioOpt = usuarioRepository.findByCorreoHMAC(HMACUtil.GenerarHuella(correo));
         if (usuarioOpt.isPresent()) {
             UsuarioModel usuario = usuarioOpt.get();
             List<CitaDTO> listaDTO = new ArrayList<>();
@@ -70,7 +71,7 @@ public class CitaService {
     }
 
     public List<CitaDTO> getCitasByUserAndPet (String correo , int idMascota) {
-        Optional<UsuarioModel> usuarioOpt = usuarioRepository.findByCorreo(correo);
+        Optional<UsuarioModel> usuarioOpt = usuarioRepository.findByCorreoHMAC(HMACUtil.GenerarHuella(correo));
         List<CitaDTO> listaDTO = new ArrayList<>();
         UsuarioModel usuario;
         if (usuarioOpt.isPresent()) {
@@ -91,7 +92,7 @@ public class CitaService {
     }
 
     public CitaDTO createCita(CitaDTO citaDTO){
-        Optional<UsuarioModel> usuarioOpt = usuarioRepository.findByCorreo(citaDTO.correoCliente());
+        Optional<UsuarioModel> usuarioOpt = usuarioRepository.findByCorreoHMAC(HMACUtil.GenerarHuella(citaDTO.correoCliente()));
         if (usuarioOpt.isPresent()) {
             UsuarioModel usuario = usuarioOpt.get();
             Optional<MascotaModel> mascotaOpt = mascotaRepository.findById(citaDTO.idMascota());

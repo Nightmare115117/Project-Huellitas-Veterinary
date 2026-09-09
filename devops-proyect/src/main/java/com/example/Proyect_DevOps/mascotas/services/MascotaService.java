@@ -14,6 +14,7 @@ import com.example.Proyect_DevOps.mascotas.models.MascotaModel;
 import com.example.Proyect_DevOps.mascotas.repositories.MascotaRepository;
 import com.example.Proyect_DevOps.users.models.UsuarioModel;
 import com.example.Proyect_DevOps.users.repositories.UsuarioRepository;
+import com.example.Proyect_DevOps.utilities.HMACUtil;
 
 @Service
 public class MascotaService {
@@ -34,7 +35,7 @@ public class MascotaService {
     }
 
     public List<MascotaDTO> getAllMascotaByUser(String correo){
-        Optional<UsuarioModel> usuarioOpt = user.findByCorreo(correo);
+        Optional<UsuarioModel> usuarioOpt = user.findByCorreoHMAC(HMACUtil.GenerarHuella(correo));
         if (usuarioOpt.isPresent()){
             UsuarioModel usuario = usuarioOpt.get();
             List<MascotaModel> mascotasModels = mascotaRepository.findByUsuario(usuario);
@@ -49,7 +50,7 @@ public class MascotaService {
     }
 
     public long getCountMascotasByUser (String correo) throws RuntimeException {
-        Optional<UsuarioModel> usuarioOpt = user.findByCorreo(correo);
+        Optional<UsuarioModel> usuarioOpt = user.findByCorreoHMAC(HMACUtil.GenerarHuella(correo));
         if (usuarioOpt.isPresent()){
             UsuarioModel usuario = usuarioOpt.get();
             return mascotaRepository.countByUsuario(usuario);
