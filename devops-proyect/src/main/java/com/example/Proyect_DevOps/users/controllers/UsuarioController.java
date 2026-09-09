@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.Proyect_DevOps.users.models.RolModel;
 import com.example.Proyect_DevOps.users.models.UsuarioModel;
 import com.example.Proyect_DevOps.users.services.UsuarioService;
 
@@ -58,9 +59,44 @@ public class UsuarioController {
     }
     
     @PostMapping("/guardar")
-    public ResponseEntity<UsuarioModel> postMethodName(@RequestBody UsuarioModel usuario) {
-        UsuarioModel nuevo = usuarioService.guardaUsuario(usuario);
-        return ResponseEntity.status(201).body(nuevo);
+    public ResponseEntity<?> postMethodName(@RequestBody Map<String, String> body) {
+        String nombre = body.get("nombre");
+        String paterno = body.get("paterno");
+        String materno = body.get("materno");
+        String correo = body.get("correo");
+        String contrasena = body.get("contrasena");
+        String idRolStr = body.get("idRol");
+
+        if (nombre == null || paterno == null || materno == null || correo == null || contrasena == null || idRolStr == null) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "success", false,
+                "mensaje", "Faltan campos obligatorios"
+            ));
+        }
+
+        try {
+            RolModel rol = new RolModel();
+            rol.setIdRol(Integer.parseInt(idRolStr));
+
+            UsuarioModel usuario = new UsuarioModel(nombre, paterno, materno, correo, contrasena, rol);
+            UsuarioModel guardado = usuarioService.guardaUsuario(usuario);
+
+            return ResponseEntity.status(201).body(Map.of(
+                "success", true,
+                "mensaje", "Usuario creado correctamente",
+                "usuario", guardado
+            ));
+        } catch (NumberFormatException e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "success", false,
+                "mensaje", "El campo idRol debe ser un número válido"
+            ));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "success", false,
+                "mensaje", e.getMessage()
+            ));
+        }
     }
 
     
