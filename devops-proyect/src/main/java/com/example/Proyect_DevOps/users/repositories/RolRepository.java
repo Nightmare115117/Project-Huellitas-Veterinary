@@ -8,4 +8,6 @@ import com.example.Proyect_DevOps.users.models.RolModel;
 @Repository
 public interface RolRepository extends JpaRepository<RolModel, Integer>{
 
+    
+
 }
