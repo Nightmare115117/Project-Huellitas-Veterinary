@@ -11,6 +11,8 @@ import com.example.Proyect_DevOps.users.models.RolModel;
 import com.example.Proyect_DevOps.users.models.UsuarioModel;
 import com.example.Proyect_DevOps.users.repositories.RolRepository;
 import com.example.Proyect_DevOps.users.repositories.UsuarioRepository;
+import com.example.Proyect_DevOps.utilities.AESUtil;
+import com.example.Proyect_DevOps.utilities.HMACUtil;
 
 @Service
 public class UsuarioService {
@@ -34,7 +36,7 @@ public class UsuarioService {
     ** @return true si las credenciales son correctas o return false si no lo son
     */
     public boolean validacionDeLogin(String correo, String contrasena){
-        Optional<UsuarioModel> usuarioOpt = usuarioRepository.findByCorreo(correo);
+        Optional<UsuarioModel> usuarioOpt = usuarioRepository.findByCorreoHMAC(HMACUtil.GenerarHuella(correo));
         if (usuarioOpt.isPresent()){
             UsuarioModel usuario = usuarioOpt.get();
             //return usuario.getContraseña().equalsIgnoreCase(contrasena);
@@ -53,7 +55,7 @@ public class UsuarioService {
         @return el idRol del usuario si este fue encontrado en la base de datos
     */
     public Integer buscarIdRol (String correo){
-        Optional<UsuarioModel> usuarioOpt = usuarioRepository.findByCorreo(correo);
+        Optional<UsuarioModel> usuarioOpt = usuarioRepository.findByCorreoHMAC(HMACUtil.GenerarHuella(correo));
         if (usuarioOpt.isPresent()){
             UsuarioModel usuario = usuarioOpt.get();
             return usuario.getRol().getIdRol();
@@ -67,7 +69,7 @@ public class UsuarioService {
     }
     
     public UsuarioModel guardaUsuario(UsuarioModel usuario){
-        if (usuarioRepository.existsByCorreo(usuario.getCorreo())){
+        if (usuarioRepository.existsByCorreoHMAC(HMACUtil.GenerarHuella(usuario.getCorreo()))){
             throw new RuntimeException("El correo que se registro ya existe");
         } 
         System.out.println(usuario.getRol());
@@ -81,6 +83,9 @@ public class UsuarioService {
         } else {
             throw new RuntimeException("El rol que ingreso no se encontro en la base de datos");
         }
+        
+        usuario.setCorreoHMAC(HMACUtil.GenerarHuella(usuario.getCorreo()));
+        usuario.setCorreo(AESUtil.encriptar(usuario.getCorreo()));
         usuario.setContraseña(passwordEncoder.encode(usuario.getContraseña()));
         return usuarioRepository.save(usuario);
     }
@@ -93,7 +98,7 @@ public class UsuarioService {
         @return el nombre del usuario encontrado, si no se encuentra regresa un "User not found"
     */
     public String extraerNombre(String correo){
-        Optional<UsuarioModel> usuarioOpt = usuarioRepository.findByCorreo(correo);
+        Optional<UsuarioModel> usuarioOpt = usuarioRepository.findByCorreoHMAC(HMACUtil.GenerarHuella(correo));
         if (usuarioOpt.isPresent()){
             UsuarioModel usuario = usuarioOpt.get();
             return usuario.getNombre() + " " + usuario.getPaterno()+ " " + usuario.getMaterno();
