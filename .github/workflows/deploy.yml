@@ -1,15 +1,63 @@
 name: Deploy AWS
 
-on: 
-  push: 
-    branches: main
+on:
+  push:
+    branches: [main]
 
-jobs: 
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Convertir owner a minúsculas
+        run: echo "OWNER_LC=${GITHUB_REPOSITORY_OWNER,,}" >> $GITHUB_ENV
+
+      - name: Login a GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configurar Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build y Push Frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./devops-frontend
+          push: true
+          tags: ghcr.io/${{ env.OWNER_LC }}/devops-frontend:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build y Push Backend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./devops-proyect
+          push: true
+          tags: ghcr.io/${{ env.OWNER_LC }}/devops-proyect:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
   deploy:
+    needs: build
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Configurar Tailscale
+        uses: tailscale/github-action@v3
+        with:
+          authkey: ${{ secrets.TS_AUTH_KEY }}
 
       - name: Configurar SSH
         run: |
@@ -18,67 +66,39 @@ jobs:
           chmod 400 ~/.ssh/Dev-Server.pem
           ssh-keyscan ${{ secrets.SSH_IP }} >> ~/.ssh/known_hosts
 
-      - name: Clone Repo
+      - name: Actualizar repositorio en servidor
         run: |
-          ssh -i ~/.ssh/Dev-Server.pem ${{ secrets.SSH_HOST_NAME}}@${{ secrets.SSH_IP }} "
-            cd ~/app/Project-Huellitas-Veterinary &&
-            git pull https://github.com/Nightmare11512/Project-Huellitas-Veterinary.git
-          "
+          ssh -i ~/.ssh/Dev-Server.pem \
+            ${{ secrets.SSH_HOST_NAME }}@${{ secrets.SSH_IP }} "
+              cd ~/app/Project-Huellitas-Veterinary &&
+              git pull
+            "
 
-      - name : Install dependencias
-        run:  |
-          ssh -i ~/.ssh/Dev-Server.pem ${{ secrets.SSH_HOST_NAME}}@${{ secrets.SSH_IP }} "
-          export NVM_DIR=\$HOME/.nvm &&
-          source \$NVM_DIR/nvm.sh &&
-          cd ~/app/Project-Huellitas-Veterinary/devops-frontend &&
-          npm install &&
-          npm run build
-          "
+      - name: Aplicar configuración de Kubernetes
+        run: |
+          ssh -i ~/.ssh/Dev-Server.pem \
+            ${{ secrets.SSH_HOST_NAME }}@${{ secrets.SSH_IP }} "
+              export KUBECONFIG=~/.kube/config &&
+              cd ~/app/Project-Huellitas-Veterinary/K8s &&
+              kubectl apply -f mariadb-deployment.yml &&
+              kubectl apply -f backend-deployment.yml &&
+              kubectl apply -f frontend-deployment.yml
+            "
 
-      - name : Hacer Imagen de Docker (Frontend)
+      - name: Reiniciar aplicaciones
         run: |
-          ssh -i ~/.ssh/Dev-Server.pem ${{ secrets.SSH_HOST_NAME}}@${{ secrets.SSH_IP }} "
-          cd ~/app/Project-Huellitas-Veterinary/devops-frontend &&
-          docker build -t frontend:1.0 .
-          "
+          ssh -i ~/.ssh/Dev-Server.pem \
+            ${{ secrets.SSH_HOST_NAME }}@${{ secrets.SSH_IP }} "
+              export KUBECONFIG=~/.kube/config &&
+              kubectl rollout restart deployment/backend &&
+              kubectl rollout restart deployment/frontend
+            "
 
-      - name : Compilar el Backend
+      - name: Esperar aplicaciones
         run: |
-          ssh -i ~/.ssh/Dev-Server.pem ${{ secrets.SSH_HOST_NAME}}@${{ secrets.SSH_IP }} "
-          cd ~/app/Project-Huellitas-Veterinary/devops-proyect &&
-          ./mvnw clean package -DskipTests
-          "
-
-      - name : Hacer Imagen de Docker (Backend)
-        run: |
-          ssh -i ~/.ssh/Dev-Server.pem ${{ secrets.SSH_HOST_NAME}}@${{ secrets.SSH_IP }} "
-          cd ~/app/Project-Huellitas-Veterinary/devops-proyect &&
-          docker build -t backend:1.0 .
-          "
-        
-      - name: Importar imagenes a K3s
-        run: |
-          ssh -i ~/.ssh/Dev-Server.pem ${{ secrets.SSH_HOST_NAME }}@${{ secrets.SSH_IP }} "
-            export KUBECONFIG=~/.kube/config &&
-            docker save frontend:1.0 | sudo k3s ctr images import - &&
-            docker save backend:1.0 | sudo k3s ctr images import -
-          "
-
-      - name: Aplicar Kubernetes
-        run: |
-          ssh -i ~/.ssh/Dev-Server.pem ${{ secrets.SSH_HOST_NAME }}@${{ secrets.SSH_IP }} "
-            export KUBECONFIG=~/.kube/config &&
-            cd ~/app/Project-Huellitas-Veterinary/K8s &&
-            kubectl apply -f mariadb-deployment.yml &&
-            kubectl apply -f backend-deployment.yml &&
-            kubectl apply -f frontend-deployment.yml
-          "
-
-      - name: Reiniciar deployments
-        run: |
-          ssh -i ~/.ssh/Dev-Server.pem ${{ secrets.SSH_HOST_NAME }}@${{ secrets.SSH_IP }} "
-            export KUBECONFIG=~/.kube/config &&
-            kubectl rollout restart deployment/frontend &&
-            kubectl rollout restart deployment/backend &&
-            kubectl rollout restart deployment/mariadb
-          "
+          ssh -i ~/.ssh/Dev-Server.pem \
+            ${{ secrets.SSH_HOST_NAME }}@${{ secrets.SSH_IP }} "
+              export KUBECONFIG=~/.kube/config &&
+              kubectl rollout status deployment/backend --timeout=120s &&
+              kubectl rollout status deployment/frontend --timeout=120s
+            "

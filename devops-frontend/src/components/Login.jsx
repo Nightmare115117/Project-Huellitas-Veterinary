@@ -50,13 +50,6 @@ function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
   
-    const esCorreo = user.includes("@");
-  
-    if (!esCorreo || user === '') {
-      alert("Ingresa un correo válido");
-      return;
-    }
-  
     try {
       const response = await fetch(`/api/usuario/login`, {
         method: "POST",
@@ -122,11 +115,12 @@ function Login() {
           <h2>Iniciar sesión</h2>
 
           <input
-            type="text"
+            type="email"
             placeholder="Ingrese su correo"
             value={user}
             onChange={(e) => setUser(e.target.value)}
             required
+            maxLength={254}
           />
 
           <input
@@ -135,6 +129,8 @@ function Login() {
             value={contraseña}
             onChange={(e) => setContraseña(e.target.value)}
             required
+            minLength={ 8 }
+            maxLength={ 16 }
           />
 
           <label className="custom-checkbox">
