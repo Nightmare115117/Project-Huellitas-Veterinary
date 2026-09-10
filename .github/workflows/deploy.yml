@@ -70,7 +70,7 @@ jobs:
         run: |
           ssh -i ~/.ssh/Dev-Server.pem \
             ${{ secrets.SSH_HOST_NAME }}@${{ secrets.SSH_IP }} "
-              export KUBECONFIG=~/.kube/config &&
+              export KUBECONFIG=/home/iron/.kube/config &&
               cd ~/K8s &&
               kubectl apply -f mariadb-deployment.yml &&
               kubectl apply -f backend-deployment.yml &&
@@ -90,7 +90,7 @@ jobs:
         run: |
           ssh -i ~/.ssh/Dev-Server.pem \
             ${{ secrets.SSH_HOST_NAME }}@${{ secrets.SSH_IP }} "
-              export KUBECONFIG=~/.kube/config &&
+              export KUBECONFIG=/home/iron/.kube/config &&
               kubectl rollout status deployment/backend --timeout=120s &&
               kubectl rollout status deployment/frontend --timeout=120s
             "
