@@ -8,6 +8,7 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
 import io.github.cdimascio.dotenv.Dotenv;
+import io.github.cdimascio.dotenv.DotenvException;
 
 public class HMACUtil {
 
@@ -15,39 +16,74 @@ public class HMACUtil {
     private static final String KEY = obtenerClave();
 
     public static void validarHMACKey() {
-        Dotenv dotenv = Dotenv.load();
-        String key = dotenv.get("HMAC_SECRET");
+        try {
+            Dotenv dotenv = Dotenv.load();
+            String key = dotenv.get("HMAC_SECRET");
+        
+            if (key == null || key.isBlank()) {
+                throw new IllegalStateException(
+                    "La variable de entorno AES_SECRET no está configurada"
+                );
+            }
 
-        if (key == null || key.isBlank()) {
-            throw new IllegalStateException(
-                "La variable de entorno AES_SECRET no está configurada"
-            );
-        }
+            if (!key.matches("[0-9a-fA-F]{64}")) {
+                throw new IllegalStateException(
+                    "AES_SECRET debe ser una cadena hexadecimal de 64 caracteres"
+                );
+            }
+        } catch (DotenvException e) {
+            String key = System.getenv("HMAC_KEY");
+            
+            if (key == null || key.isBlank()) {
+                throw new IllegalStateException(
+                    "La variable de entorno AES_SECRET no está configurada"
+                );
+            }
 
-        if (!key.matches("[0-9a-fA-F]{64}")) {
-            throw new IllegalStateException(
-                "AES_SECRET debe ser una cadena hexadecimal de 64 caracteres"
-            );
-        }
+            if (!key.matches("[0-9a-fA-F]{64}")) {
+                throw new IllegalStateException(
+                    "AES_SECRET debe ser una cadena hexadecimal de 64 caracteres"
+                );
+            }
+        }   
     }
 
     private static String obtenerClave() {
-        Dotenv dotenv = Dotenv.load();
-        String key = dotenv.get("HMAC_SECRET");
+        try {
+            Dotenv dotenv = Dotenv.load();
+            String key = dotenv.get("HMAC_SECRET");
+        
+            if (key == null || key.isBlank()) {
+                throw new IllegalStateException(
+                    "La variable de entorno AES_SECRET no está configurada"
+                );
+            }
 
-        if (key == null || key.isBlank()) {
-            throw new IllegalStateException(
-                "La variable de entorno AES_SECRET no está configurada"
-            );
-        }
+            if (!key.matches("[0-9a-fA-F]{64}")) {
+                throw new IllegalStateException(
+                    "AES_SECRET debe ser una cadena hexadecimal de 64 caracteres"
+                );
+            }
 
-        if (!key.matches("[0-9a-fA-F]{64}")) {
-            throw new IllegalStateException(
-                "AES_SECRET debe ser una cadena hexadecimal de 64 caracteres"
-            );
-        }
+            return key;
 
-        return key;
+        } catch (DotenvException e) {
+            String key = System.getenv("HMAC_KEY");
+            
+            if (key == null || key.isBlank()) {
+                throw new IllegalStateException(
+                    "La variable de entorno AES_SECRET no está configurada"
+                );
+            }
+
+            if (!key.matches("[0-9a-fA-F]{64}")) {
+                throw new IllegalStateException(
+                    "AES_SECRET debe ser una cadena hexadecimal de 64 caracteres"
+                );
+            }
+
+            return key;
+        }   
     }
 
     public static String GenerarHuella(String dato) {
