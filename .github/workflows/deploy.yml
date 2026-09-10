@@ -71,7 +71,7 @@ jobs:
           ssh -i ~/.ssh/Dev-Server.pem \
             ${{ secrets.SSH_HOST_NAME }}@${{ secrets.SSH_IP }} "
               export KUBECONFIG=~/.kube/config &&
-              cd ~/app/Project-Huellitas-Veterinary/K8s &&
+              cd ~/K8s &&
               kubectl apply -f mariadb-deployment.yml &&
               kubectl apply -f backend-deployment.yml &&
               kubectl apply -f frontend-deployment.yml
