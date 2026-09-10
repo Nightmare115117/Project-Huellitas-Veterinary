@@ -74,7 +74,7 @@ public class AESUtil {
             return key;
 
         } catch (DotenvException e) {
-            String key = System.getenv("AES_KEY");
+            String key = System.getenv("AES_SECRET");
             
             if (key == null || key.isBlank()) {
                 throw new IllegalStateException(
