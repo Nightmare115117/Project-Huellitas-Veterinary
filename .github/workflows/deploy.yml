@@ -1,4 +1,4 @@
-name: Deploy AWS
+name: Deploy
 
 on:
   push:
@@ -65,14 +65,6 @@ jobs:
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/Dev-Server.pem
           chmod 400 ~/.ssh/Dev-Server.pem
           ssh-keyscan ${{ secrets.SSH_IP }} >> ~/.ssh/known_hosts
-
-      - name: Actualizar repositorio en servidor
-        run: |
-          ssh -i ~/.ssh/Dev-Server.pem \
-            ${{ secrets.SSH_HOST_NAME }}@${{ secrets.SSH_IP }} "
-              cd ~/app/Project-Huellitas-Veterinary &&
-              git pull
-            "
 
       - name: Aplicar configuración de Kubernetes
         run: |
