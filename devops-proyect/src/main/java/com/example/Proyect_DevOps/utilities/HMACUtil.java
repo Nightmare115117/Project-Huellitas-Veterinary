@@ -32,7 +32,7 @@ public class HMACUtil {
                 );
             }
         } catch (DotenvException e) {
-            String key = System.getenv("HMAC_KEY");
+            String key = System.getenv("HMAC_SECRET");
             
             if (key == null || key.isBlank()) {
                 throw new IllegalStateException(
@@ -68,7 +68,7 @@ public class HMACUtil {
             return key;
 
         } catch (DotenvException e) {
-            String key = System.getenv("HMAC_KEY");
+            String key = System.getenv("HMAC_SECRET");
             
             if (key == null || key.isBlank()) {
                 throw new IllegalStateException(
