@@ -81,7 +81,7 @@ jobs:
         run: |
           ssh -i ~/.ssh/Dev-Server.pem \
             ${{ secrets.SSH_HOST_NAME }}@${{ secrets.SSH_IP }} "
-              export KUBECONFIG=~/.kube/config &&
+              export KUBECONFIG=/home/iron/.kube/config &&
               kubectl rollout restart deployment/backend &&
               kubectl rollout restart deployment/frontend
             "

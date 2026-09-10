@@ -44,6 +44,18 @@ spec:
                   name: huellitas-secrets
                   key: DB_PASSWORD
 
+            - name: AES_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: huellitas-secrets
+                  key: AES_SECRET
+
+            - name: HMAC_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: huellitas-secrets
+                  key: HMAC_SECRET
+
 ---
 apiVersion: v1
 kind: Service
