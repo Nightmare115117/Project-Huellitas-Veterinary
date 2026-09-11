@@ -11,7 +11,7 @@ function MainMenuGestor() {
     .getItem("Usuario")
     ?.replace(/^"|"$/g, "");
 
-  const [gestor, setGestor] = useState<any>(null);
+  const [gestor, setGestor] = useState(null);
   const [activeItem, setActiveItem] = useState("");
 
   const handleLogout = () => {
@@ -76,7 +76,7 @@ function MainMenuGestor() {
           icon: "error",
         });
       });
-  }, [correo]);
+  }, [correo, setGestor]);
 
   return (
     <div className="main-menu">
