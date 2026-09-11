@@ -68,7 +68,7 @@ public class UsuarioService {
     public List<UsuarioModel> mostrarUsuarios(){
         List<UsuarioModel> usuarios = new ArrayList <>();
         for (UsuarioModel entidad : usuarioRepository.findAll()) {
-            entidad.setContraseña(AESUtil.desencriptar(entidad.getCorreo()));
+            entidad.setCorreo(AESUtil.desencriptar(entidad.getCorreo()));
             usuarios.add(entidad);
         }
         return usuarios;
