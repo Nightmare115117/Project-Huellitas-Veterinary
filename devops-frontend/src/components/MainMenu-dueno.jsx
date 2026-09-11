@@ -1,696 +1,472 @@
-import { useNavigate, Navigate } from "react-router-dom";
-import { Select, MenuItem, FormControl, InputLabel} from "@mui/material";
+import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { LocalizationProvider, DatePicker, TimePicker } from '@mui/x-date-pickers';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-
-import Swal from "sweetalert2";
-import "sweetalert2/dist/sweetalert2.min.css";
 import "../styles/MainMenu-dueno.css";
 
-const checkStyle = `
-  @keyframes checkEntrada {
-    from {
-      opacity: 0;
-      transform: scale(0) rotate(-180deg);
+const formatDate = (value) => {
+    if (!value) return "--";
+
+    const date = new Date(`${value}T00:00:00`);
+    if (Number.isNaN(date.getTime())) {
+        return value;
     }
-    to {
-      opacity: 1;
-      transform: scale(1) rotate(0deg);
+
+    return date.toLocaleDateString("es-MX", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric"
+    });
+};
+
+const formatTime = (value) => {
+    if (!value) return "--";
+
+    const time = new Date(`1970-01-01T${value}`);
+    if (Number.isNaN(time.getTime())) {
+        return value;
     }
-  }
-`;
 
-const TablaCitas = ({ citas, cancelMode, citasSeleccionadas, setCitasSeleccionadas }) => {
-  if (!citas || !Array.isArray(citas) || citas.length === 0) {
-    return <p style={{color: "black", opacity: 1}}>No hay citas registradas.</p>;
-  }
-
-  const esCancelable = (estadoCita) => estadoCita === 0 || estadoCita === 1;
-
-  const handleCheck = (idCita) => {
-    setCitasSeleccionadas((prev) =>
-      prev.includes(idCita) ? prev.filter((id) => id !== idCita) : [...prev, idCita]
-    );
-  };
-
-  return (
-    <>
-      <style>{checkStyle}</style>
-      <div className="tabla-container">
-        <table className="tabla-citas">
-          <thead>
-            <tr>
-              {cancelMode && <th>Cancelar</th>}
-              <th>Fecha</th>
-              <th>Estado</th>
-              <th>Entrada Agendada</th>
-              <th>Hora de Salida</th>
-            </tr>
-          </thead>
-          <tbody>
-            {citas.map((cita, index) => (
-              <tr key={cita.idCita}>
-                {cancelMode && (
-                  <td style={{ textAlign: "center" }}>
-                    {esCancelable(cita.estadoCita) ? (
-                      <input
-                        type="checkbox"
-                        checked={citasSeleccionadas.includes(cita.idCita)}
-                        onChange={() => handleCheck(cita.idCita)}
-                        style={{
-                          width: "18px",
-                          height: "18px",
-                          cursor: "pointer",
-                          animation: "checkEntrada 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards",
-                          animationDelay: `${index * 0.06}s`,
-                          opacity: 0,
-                        }}
-                      />
-                    ) : (
-                      <span
-                        title="No cancelable"
-                        style={{
-                          display: "inline-block",
-                          animation: "checkEntrada 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards",
-                          animationDelay: `${index * 0.06}s`,
-                          opacity: 0,
-                        }}
-                      >
-                        —
-                      </span>
-                    )}
-                  </td>
-                )}
-                <td>{cita.fecha}</td>
-                <td>
-                  <span className={`estado ${
-                    cita.estadoCita === 2 ? "completado" 
-                    : cita.estadoCita === 0 ? "Asignacion Pendiente"
-                    : cita.estadoCita === 1 ? "pendiente" 
-                    : "cancelado"
-                  }`}>
-                    {cita.estadoCita === 2 ? "Completado" 
-                    : cita.estadoCita === 1 ? "Pendiente" 
-                    : cita.estadoCita === 0 ? "Asignacion Pendiente"
-                    : "Cancelado"}
-                  </span>
-                </td>
-                <td>{cita.entradaAgendada}</td>
-                <td>{cita.estado_cita === 1 ? cita.horaSalida : "—"}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </>
-  );
+    return time.toLocaleTimeString("es-MX", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true
+    });
 };
 
-const TablaMascotas = ({mascotas}) => {
-  if (!mascotas || !Array.isArray(mascotas)){
-    return <p style={{color: "black", opacity: 1}}>No hay mascotas registradas</p>
-  } else if (mascotas.length === 0) {
-    return <p style={{color: "black", opacity: 1}}>No hay mascotas registradas</p>
-  } else {
-    return (
-      <div className="tabla-container">
-        <table className="tabla-mascotas">
-          <thead>
-            <tr>
-              <th>Nombre</th>
-              <th>Fecha de Nacimiento</th>
-              <th>Especie</th>
-              <th>Raza</th>
-            </tr>
-          </thead>
-          <tbody>
-            {mascotas.map((mascota) => (
-              <tr key={mascota.idMascota}>
-                <td>{mascota.nombre}</td>
-                <td>{mascota.fechaNacimiento}</td>
-                <td>{mascota.raza.especie.nombre}</td>
-                <td>{mascota.raza.nombre}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    );
-  }
+const calcularEdad = (fechaNacimiento) => {
+    if (!fechaNacimiento) return "Sin edad";
+
+    const birth = new Date(`${fechaNacimiento}T00:00:00`);
+    if (Number.isNaN(birth.getTime())) return "Sin edad";
+
+    const today = new Date();
+    let years = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+        years -= 1;
+    }
+
+    return `${years} año${years === 1 ? "" : "s"}`;
 };
 
-const TablaTratamientos = ({tratamientos}) => {
-  if (!tratamientos || !Array.isArray(tratamientos)) {
-    return <p style={{color: "black", opacity: 1}}>No hay tratamientos en su historial</p>
-  } else if (tratamientos.length === 0) {
-    return <p style={{color: "black", opacity: 1}}></p>
-  } else {
-    return (
-      <div className="tabla-container">
-        <table className="tabla-tratamientos">
-          <thead>
-            <tr>
-              <th>Medicamento</th>
-              <th>Descripción</th>
-              <th>Costo</th>
-              <th>Estatus</th>
-            </tr>
-          </thead>
-          <tbody>
-            {tratamientos.map((tratamiento) => (
-              <tr key={tratamiento.idTratamiento}>
-                <td>{tratamiento.medicamento}</td>
-                <td>{tratamiento.descripcion}</td>
-                <td>{tratamiento.costo}</td>
-                <td>
-                  <span className={`estado ${
-                    tratamiento.estatus === 1 ? "completado" 
-                    : tratamiento.estatus === 100 ? "Asignacion Pendiente"
-                    : tratamiento.estatus === 0 ? "pendiente" 
-                    : "cancelado"
-                  }`}>
-                    {tratamiento.estatus === 0 ? "Activo"
-                    : "Completado"}
-                  </span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    )
-  }
+const getEstadoCitaLabel = (estado) => {
+    switch (estado) {
+        case 1:
+            return { label: "Programada", className: "pending" };
+        case 2:
+            return { label: "Confirmada", className: "success" };
+        case 3:
+            return { label: "Cancelada", className: "pending" };
+        default:
+            return { label: "Desconocida", className: "pending" };
+    }
 };
 
+function MainMenuDueno() {
+    const navigate = useNavigate();
+    const [activeItem, setActiveItem] = useState("Inicio");
+    const [ownerName, setOwnerName] = useState("Dueño");
+    const [mascotas, setMascotas] = useState([]);
+    const [citas, setCitas] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-function MainMenu() {
-  const navigate = useNavigate();
-  const [dueno, setDueno] = useState(null);
-  const [activeItem, setActiveItem] = useState("");
-  const [mascotas, setMascotas] = useState([]);
-  const [selectedMascota, setSelectedMascota] = useState("");
-  const [selectedMascotaCita, setSelectedMascotaCita] = useState("");
-  const [ListaCitas, setCitas] = useState([]);
-  const correo = sessionStorage.getItem("Usuario")?.replace(/^"|"$/g, "");
-  const menuItems = ["Mascotas", "Citas", "Tratamientos"];
-  const [noMascotas, setNoMascota] = useState(0);
-  const [noCitas, setNoCita] = useState(0);
-  const [isLeaving, setIsLeaving] = useState(false);
-  const mascotaSeleccionadaObj = mascotas.find((m) => m.idMascota === Number(selectedMascota));
-  const [tratamientos, setTratamientos] = useState([]);
-  const [noTratamientos, setNoTratamientos] = useState("");
-  const [mostrarFormCita, setMostrarFormCita] = useState(false);
-  const [fechaCita, setFechaCita] = useState(null);
-  const [horaCita, setHoraCita] = useState(null);
-  const [refreshCitas, setRefreshCitas] = useState(0);
-  const [isClosingModal, setIsClosingModal] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+    const correo = sessionStorage.getItem("Usuario")?.replace(/^"|"$/g, "") || "";
 
-  // ── Nuevos estados para el modo cancelación ──
-  const [cancelMode, setCancelMode] = useState(false);
-  const [citasSeleccionadas, setCitasSeleccionadas] = useState([]);
+    useEffect(() => {
+        if (!correo) {
+            navigate("/");
+            return;
+        }
 
-  const handleLogout = () => {
-    Swal.fire({
-      title: "Cerrar Sesión",
-      text: "¿Estás seguro de querer cerrar sesión?",
-      icon: "question",
-      showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        navigate("/");
+        let isMounted = true;
+
+        const fetchData = async () => {
+            try {
+                const [perfilRes, mascotasRes, citasRes] = await Promise.all([
+                    fetch(`/api/usuario/Nombre/${correo}`),
+                    fetch(`/api/mascota/${correo}`),
+                    fetch(`/api/cita/${correo}`)
+                ]);
+
+                if (!perfilRes.ok || !mascotasRes.ok || !citasRes.ok) {
+                    throw new Error("No se pudo cargar la información del dueño");
+                }
+
+                const perfilData = await perfilRes.json();
+                const mascotasData = await mascotasRes.json();
+                const citasData = await citasRes.json();
+
+                if (!isMounted) return;
+
+                setOwnerName(perfilData?.nombre || "Dueño");
+                setMascotas(Array.isArray(mascotasData) ? mascotasData : []);
+                setCitas(Array.isArray(citasData) ? citasData : []);
+            } catch (error) {
+                console.error(error);
+                if (isMounted) {
+                    setOwnerName("Dueño");
+                    setMascotas([]);
+                    setCitas([]);
+                }
+            } finally {
+                if (isMounted) {
+                    setLoading(false);
+                }
+            }
+        };
+
+        fetchData();
+
+        return () => {
+            isMounted = false;
+        };
+    }, [correo, navigate]);
+
+    const handleLogout = () => {
         sessionStorage.clear();
-        Swal.fire({ title: "Sesión cerrada con Exito", text: "Hasta pronto", icon: "success" });
-      }
-    });
-  };
-
-  useEffect(() => {
-    if (!correo) {
-      Swal.fire({
-        title: "Sesión Expirada",
-        text: "Por favor de iniciar sesion nuevamente",
-        icon: "warning", 
-        timer: 3000,
-        timerProgressBar: true,
-        showConfirmButton: false  
-      }).then(() => {
         navigate("/");
-      });
-    }
-  }, [correo, navigate]);
+    };
 
-  useEffect(() => {
-    if (!correo) return;
-    fetch(`/api/usuario/Nombre/${correo}`, {})
-      .then((res) => res.json())
-      .then((data) => setDueno(data))
-      .catch((err) => console.error(err));
-  }, [correo]);
+    const menuItems = [
+        { name: "Inicio", icon: "🏠" },
+        { name: "Mi Mascota", icon: "🐾" },
+        { name: "Citas", icon: "🗓️" },
+        { name: "Tratamientos", icon: "💊" },
+        { name: "Historial", icon: "📋" },
+        { name: "Perfil", icon: "👤" }
+    ];
 
-  useEffect(() => {
-    if (!correo) return;
-      fetch(`/api/mascota/usuario/${correo}`)
-      .then(res => res.json())
-      .then(data => setNoMascota(data))
-      .catch(err => console.error(err));
-  }, [correo]);
+    const pet = mascotas[0] || null;
+    const petName = pet?.nombre || "Mi mascota";
+    const petSpecies = pet?.raza?.especie?.nombre || pet?.raza?.nombre || "Sin especie";
+    const petBreed = pet?.raza?.nombre || "Sin raza";
+    const petAge = calcularEdad(pet?.fechaNacimiento);
+    const nextCita = [...citas].sort((a, b) => new Date(a.fecha) - new Date(b.fecha))[0] || null;
 
-  useEffect(() => {
-    if (!correo) return;
-      fetch(`/api/cita/usuario/${correo}`)
-      .then(res => res.json())
-      .then(data => setNoCita(data))
-      .catch(err => console.error(err));
-  }, [correo]);
+    const changeMenu = (item) => {
+        setActiveItem(item);
+    };
 
-  useEffect(() => {
-    if (!correo) return;
-    fetch(`/api/tratamiento/contar/${encodeURIComponent(correo)}`)
-    .then(res => res.json())
-    .then(data => setNoTratamientos(data))
-    .catch(err => console.error(err));
-  }, [correo]);
-
-  const changeMenu = (item) => {
-    if (item === activeItem) return;
-
-    setIsLeaving(true);
-
-    setTimeout(() => {
-      setActiveItem(item);
-      setIsLeaving(false);
-    }, 250);
-  };
-
-  useEffect(() => {
-    if (!correo) return;
-  
-    const url = mascotaSeleccionadaObj
-      ? `/api/cita/${encodeURIComponent(correo)}/${mascotaSeleccionadaObj.idMascota}`
-      : `/api/cita/${correo}`;
-  
-    fetch(url)
-      .then(async (res) => {
-        if (!res.ok) {
-          const text = await res.text();
-          throw new Error(text);
-        }
-        return res.json();
-      })
-      .then((data) => setCitas(data))
-      .catch((err) => console.error("Error en cita API:", err));
-  
-  }, [correo, mascotaSeleccionadaObj, refreshCitas]);
-
-  useEffect(() => {
-    if (!correo) return;
-    fetch(`/api/mascota/${correo}`)
-    .then(res => res.json())
-    .then(data => setMascotas(data))
-    .catch((err => console.error(err)));
-  }, [correo])
-
-  useEffect(() => {
-    if (!ListaCitas || ListaCitas === 0) return;
-
-    const hoy = new Date();
-
-    if (ListaCitas && ListaCitas.length > 0) {
-      
-      ListaCitas.forEach(element => {
-        if (element.estadoCita === 1) {
-          
-          const fechaCitaHoy = new Date(element.fecha);
-          const diferenciaDias = Math.ceil((fechaCitaHoy - hoy) / (1000 * 60 * 60 * 24));
-
-          const keyRecordatorio = `recordatorio_${element.idCita}`;
-          const yaSeAviso = localStorage.getItem(keyRecordatorio);
-
-          if (diferenciaDias === 1 && !yaSeAviso) {
-            Swal.fire({
-              title: "Recordatorio de cita",
-              text: `Tienes una cita mañana ${element.fecha} a las ${element.entradaAgendada}`,
-              icon: "info",
-              confirmButtonColor: "#3085d6",
-              confirmButtonText: "Entendido"
-            }).then (() => {
-              localStorage.setItem(keyRecordatorio, "true");
-            });
-          }
-        }
-      });
-    }
-  }, [ListaCitas])
-
-  useEffect(() => {
-    if (!correo) return;
-    if (!mascotaSeleccionadaObj) {
-      fetch(`/api/tratamiento/usuario/${encodeURIComponent(correo)}`)
-      .then(res => res.json())
-      .then(data => setTratamientos(data))
-      .catch(err => console.log(err));
-     } else {
-      fetch(`/api/tratamiento/usuario/${encodeURIComponent(correo)}/${mascotaSeleccionadaObj.idMascota}`)
-      .then(res => res.json())
-      .then(data => setTratamientos(data))
-      .catch(err => console.error(err));
-    }
-  }, [correo, mascotaSeleccionadaObj]);
-
-  async function crearCita() {
-    if (!selectedMascotaCita || !fechaCita || !horaCita) {
-      Swal.fire({
-        title: "Campos incompletos",
-        text: "Por favor selecciona una mascota, fecha y hora para la cita.",
-        icon: "warning"
-      });
-      return;
-    }
-
-    if (isSubmitting) return;
-    setIsSubmitting(true);
-    try {
-      const fechaFormateada = fechaCita.format('YYYY-MM-DD');
-      const horaFormateada = horaCita.format('HH:mm:ss');
-  
-      const response = await fetch(`/api/cita/crear`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          correoCliente: correo,
-          idMascota: selectedMascotaCita,
-          fecha: fechaFormateada,
-          entradaAgendada: horaFormateada,
-        })
-      });
-      const data = await response.json();
-      console.log(data);
-      if (response.ok) {
-        Swal.fire({ title: "Cita creada con éxito", text: "La cita ha sido creada con éxito", icon: "success" });
-        setMostrarFormCita(false);
-        setFechaCita(null);
-        setHoraCita(null);
-        setSelectedMascotaCita("");
-        setRefreshCitas(prev => prev + 1);
-      } else {
-        Swal.fire({ title: "Error al crear la cita", text: data.message || "Por favor, intente nuevamente", icon: "error" });
-        setMostrarFormCita(false);
-        setFechaCita(null);
-        setHoraCita(null);
-        setSelectedMascotaCita("");
-      }
-    } catch (error) {
-      console.error("Error al crear la cita:", error);
-      Swal.fire({ title: "Error al crear la cita", text: error.message || "Por favor, intente nuevamente", icon: "error" });
-    } finally {
-      setIsSubmitting(false);
-    }
-  }
-
-  // ── Función para cancelar las citas seleccionadas ──
-  async function cancelarCitas() {
-    if (citasSeleccionadas.length === 0) {
-      Swal.fire({ title: "Sin selección", text: "Selecciona al menos una cita para cancelar.", icon: "warning" });
-      return;
-    }
-
-    const result = await Swal.fire({
-      title: "¿Cancelar citas?",
-      text: `Se cancelarán ${citasSeleccionadas.length} cita(s). Esta acción no se puede deshacer.`,
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#d33",
-      cancelButtonColor: "#3085d6",
-      confirmButtonText: "Sí, cancelar",
-      cancelButtonText: "No"
-    });
-
-    if (!result.isConfirmed) return;
-
-    try {
-      await Promise.all(
-        citasSeleccionadas.map((idCita) =>
-          fetch(`/api/cita/cancelar/${idCita}`, {
-            method: "PUT",
-          })
-        )
-      );
-      Swal.fire({ title: "Citas canceladas", text: "Las citas seleccionadas han sido canceladas.", icon: "success" });
-      setCancelMode(false);
-      setCitasSeleccionadas([]);
-      setRefreshCitas((prev) => prev + 1);
-    } catch (error) {
-      console.error("Error al cancelar citas:", error);
-      Swal.fire({ title: "Error", text: "No se pudieron cancelar las citas. Intente nuevamente.", icon: "error" });
-    }
-  }
-
-  const closeModal = () => {
-    setIsClosingModal(true);
-    setTimeout(() => {
-      setMostrarFormCita(false);
-      setIsClosingModal(false);
-      setFechaCita(null);
-      setHoraCita(null);
-      setSelectedMascotaCita("");
-    }, 300);
-  };
-
-  return (
-    <>
-      <div className="main-menu" style={{ display: "flex" }}>
-
-        <div className={`sidebar primary ${dueno ? "active" : ""}`}>
-          <h2 style={{color: "white"}}>Menú Principal</h2>
-          <h3 style={{color: "white"}}>Bienvenido, {dueno ? dueno.nombre : "Dueño de Mascota"}</h3>
-          <nav className="nav-links">
-            {menuItems.map((item) => (
-              <div
-                key={item}
-                className={`menu-item ${activeItem === item ? "active" : ""}`}
-                onClick={() => {
-                  changeMenu(item);
-                  setSelectedMascota("");
-                  setCancelMode(false);
-                  setCitasSeleccionadas([]);
-                }}
-                style={{ cursor: "pointer", margin: "5px 0" }}>
-                {item}
-              </div>
-            ))}
-          </nav>
-          <button type="button" onClick={handleLogout} className="btn">Cerrar Sesión</button>
-        </div>
-
-        <div className={`sidebar secondary ${activeItem}`}>
-
-          {activeItem === "" && (
-            <>
-              <h2 style={{fontWeight: "bold", color: "black"}}>Datos Generales</h2>
-
-              <div className="slydes-wrapper">
-                <div className={`slydes ${isLeaving ? "slide-out" : ""}`}>
-                  <span className="icon">🐕</span>
-                  <div className="card-text">
-                    <span style={{fontWeight: "bold", fontSize: "30px"}}>&nbsp;Mascotas</span>
-                    <span className="subtitle">
-                    &nbsp;Usted tiene {noMascotas} {noMascotas === 1 ? "Mascota" : "Mascotas"}
-                    </span>
-                  </div>
+    return (
+        <div className="owner-container">
+            <aside className="owner-sidebar">
+                <div className="owner-header">
+                    <h2>Mi Huellitas</h2>
+                    <p>Bienvenido, {ownerName}</p>
                 </div>
 
-                <div className={`slydes ${isLeaving ? "slide-out" : ""}`}>
-                  <span className="icon">🗓️</span>
-                  <div className="card-text">
-                    <span style={{fontWeight: "bold", fontSize: "30px"}}>&nbsp;Citas</span>
-                    <span className="subtitle">
-                    &nbsp;Usted tiene {noCitas} {noCitas === 1 ? "Cita" : "Citas"} pendientes
-                    </span>
-                  </div>
-                </div>
-
-                <div className={`slydes ${isLeaving ? "slide-out" : ""}`}>
-                  <span className="icon">💉</span>
-                  <div className="card-text">
-                    <span style={{fontWeight: "bold", fontSize: "30px"}}>&nbsp;Tratamientos</span>
-                    <span className="subtitle">
-                    &nbsp;Usted tiene {noTratamientos} {noTratamientos === 1 ? "Tratamiento" : "Tratamientos"}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
-
-          {activeItem === "Mascotas" && (
-            <div className={isLeaving ? "slide-out" : "slide-in"}>
-              <h2 style={{fontWeight: "bold", color: "black"}}>Datos de Mascotas</h2>
-              <TablaMascotas mascotas={mascotas} />
-            </div>
-          )}
-
-          {activeItem === "Citas" && (
-            <div className={isLeaving ? "slide-out" : "slide-in"}>
-              <h2 style={{fontWeight: "bold", color: "black"}}>Datos de Citas</h2> 
-              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                <FormControl fullWidth sx={{ m: 1, minWidth: 200 }}>
-                  <InputLabel id="select-mascota-label">Filtrar por Mascota</InputLabel>
-                  <Select
-                    labelId="select-mascota-label"
-                    value={selectedMascota}
-                    label="Filtrar por Mascota"
-                    onChange={(e) => setSelectedMascota(e.target.value)}
-                  >
-                    <MenuItem value=""><em>Todas las mascotas</em></MenuItem>
-                    {mascotas.map((m) => (
-                      <MenuItem key={m.idMascota} value={m.idMascota}>{m.nombre}</MenuItem>
+                <nav className="owner-nav">
+                    {menuItems.map((item) => (
+                        <button
+                            type="button"
+                            key={item.name}
+                            className={`owner-menu-item ${
+                                activeItem === item.name ? "active" : ""
+                            }`}
+                            onClick={() => changeMenu(item.name)}
+                        >
+                            <span className="owner-menu-icon">{item.icon}</span>
+                            <span>{item.name}</span>
+                        </button>
                     ))}
-                  </Select>
-                </FormControl>
-                <button className="botonCrear" onClick={() => setMostrarFormCita(true)}>Crear Cita</button>
-              </div>
-              <TablaCitas
-                citas={ListaCitas}
-                cancelMode={cancelMode}
-                citasSeleccionadas={citasSeleccionadas}
-                setCitasSeleccionadas={setCitasSeleccionadas}
-              />
-            </div>
-          )}
+                </nav>
 
-          {activeItem === "Tratamientos" && (
-            <div className={isLeaving ? "slide-out" : "slide-in"}>
-              <h2 style={{fontWeight: "bold", color: "black"}}>Datos de Tratamientos</h2>
-              <FormControl fullWidth sx={{ m: 1, minWidth: 200 }}>
-                <InputLabel id="select-mascota-label">Filtrar por Mascota</InputLabel>
-                <Select
-                  labelId="select-mascota-label"
-                  value={selectedMascota}
-                  label="Filtrar por Mascota"
-                  onChange={(e) => setSelectedMascota(e.target.value)}
-                >
-                  <MenuItem value=""><em>Todas las mascotas</em></MenuItem>
-                  {mascotas.map((m) => (
-                    <MenuItem key={m.idMascota} value={m.idMascota}>{m.nombre}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              <TablaTratamientos tratamientos={tratamientos} />
-            </div>
-          )}
+                <button type="button" className="owner-logout" onClick={handleLogout}>
+                    🚪 Cerrar Sesión
+                </button>
+            </aside>
 
-          {activeItem !== "" && (
-            <>
-              <p></p>
-              <button
-                onClick={() => {
-                  setSelectedMascota("");
-                  setActiveItem("");
-                  setCancelMode(false);
-                  setCitasSeleccionadas([]);
-                }}
-                className="btn"
-              >
-                Volver
-              </button>
+            <main className="owner-content">
+                {loading ? (
+                    <div className="owner-section">
+                        <div className="owner-loading">Cargando información del dueño...</div>
+                    </div>
+                ) : (
+                    <>
+                        {activeItem === "Inicio" && (
+                            <div className="owner-section">
+                                <h1>Panel del dueño</h1>
+                                <p className="owner-subtitle">Resumen de tu mascota y sus cuidados</p>
 
-              {activeItem === "Citas" && (
-                <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
-                  <button
-                    className="btn Cancelar"
-                    onClick={() => {
-                      setCancelMode((prev) => !prev);
-                      setCitasSeleccionadas([]);
-                    }}
-                  >
-                    {cancelMode ? "Descartar" : "Cancelar Citas"}
-                  </button>
+                                <div className="owner-cards">
+                                    <div className="owner-card">
+                                        <span className="owner-card-icon">🐾</span>
+                                        <div>
+                                            <h3>Mi mascota</h3>
+                                            <strong>{petName}</strong>
+                                            <p>{petSpecies} · {petBreed}</p>
+                                        </div>
+                                    </div>
 
-                  {cancelMode && (
-                    <button className="btnCrear" onClick={cancelarCitas}>
-                      Confirmar Cancelación ({citasSeleccionadas.length})
-                    </button>
-                  )}
-                </div>
-              )}
-            </>
-          )}
+                                    <div className="owner-card">
+                                        <span className="owner-card-icon">🗓️</span>
+                                        <div>
+                                            <h3>Próxima cita</h3>
+                                            <strong>{nextCita ? formatDate(nextCita.fecha) : "--"}</strong>
+                                            <p>{nextCita ? `${formatTime(nextCita.entradaAgendada)} / ${nextCita.nombreVeterinario || "Veterinario"}` : "Sin citas registradas"}</p>
+                                        </div>
+                                    </div>
 
+                                    <div className="owner-card">
+                                        <span className="owner-card-icon">💊</span>
+                                        <div>
+                                            <h3>Tratamiento</h3>
+                                            <strong>{pet ? "Activo" : "Sin dato"}</strong>
+                                            <p>{pet ? "Revisión y cuidado continuo" : "No hay información disponible"}</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="owner-card">
+                                        <span className="owner-card-icon">📋</span>
+                                        <div>
+                                            <h3>Historial</h3>
+                                            <strong>{citas.length}</strong>
+                                            <p>Eventos registrados</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="owner-table-container">
+                                    <h2>Actividad reciente</h2>
+                                    {citas.length === 0 ? (
+                                        <div className="owner-empty">No hay citas registradas para este usuario.</div>
+                                    ) : (
+                                        <table className="owner-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Fecha</th>
+                                                    <th>Hora</th>
+                                                    <th>Veterinario</th>
+                                                    <th>Estado</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {citas.slice(0, 3).map((cita) => {
+                                                    const estado = getEstadoCitaLabel(cita.estadoCita);
+                                                    return (
+                                                        <tr key={cita.idCita}>
+                                                            <td>{formatDate(cita.fecha)}</td>
+                                                            <td>{formatTime(cita.entradaAgendada)}</td>
+                                                            <td>{cita.nombreVeterinario || "Pendiente de asignación"}</td>
+                                                            <td>
+                                                                <span className={`status ${estado.className}`}>
+                                                                    {estado.label}
+                                                                </span>
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })}
+                                            </tbody>
+                                        </table>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {activeItem === "Mi Mascota" && (
+                            <div className="owner-section">
+                                <h1>Mi mascota</h1>
+                                <p className="owner-subtitle">Información principal de {petName}</p>
+
+                                {!pet ? (
+                                    <div className="owner-empty">No se encontró una mascota asociada a este usuario.</div>
+                                ) : (
+                                    <div className="owner-table-container">
+                                        <table className="owner-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Campo</th>
+                                                    <th>Detalle</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td>Nombre</td>
+                                                    <td>{pet.nombre}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Especie</td>
+                                                    <td>{petSpecies}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Raza</td>
+                                                    <td>{petBreed}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Edad</td>
+                                                    <td>{petAge}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Fecha de nacimiento</td>
+                                                    <td>{formatDate(pet.fechaNacimiento)}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Dueño</td>
+                                                    <td>{ownerName}</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {activeItem === "Citas" && (
+                            <div className="owner-section">
+                                <h1>Citas</h1>
+                                <p className="owner-subtitle">Tus próximas citas veterinarias</p>
+
+                                <div className="owner-table-container">
+                                    {citas.length === 0 ? (
+                                        <div className="owner-empty">Todavía no tienes citas registradas.</div>
+                                    ) : (
+                                        <table className="owner-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Fecha</th>
+                                                    <th>Hora</th>
+                                                    <th>Motivo</th>
+                                                    <th>Doctor</th>
+                                                    <th>Estado</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {citas.map((cita) => {
+                                                    const estado = getEstadoCitaLabel(cita.estadoCita);
+                                                    return (
+                                                        <tr key={cita.idCita}>
+                                                            <td>{formatDate(cita.fecha)}</td>
+                                                            <td>{formatTime(cita.entradaAgendada)}</td>
+                                                            <td>Consulta veterinaria</td>
+                                                            <td>{cita.nombreVeterinario || "Pendiente"}</td>
+                                                            <td>
+                                                                <span className={`status ${estado.className}`}>
+                                                                    {estado.label}
+                                                                </span>
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })}
+                                            </tbody>
+                                        </table>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {activeItem === "Tratamientos" && (
+                            <div className="owner-section">
+                                <h1>Tratamientos</h1>
+                                <p className="owner-subtitle">Medicamentos y cuidados actuales</p>
+
+                                <div className="owner-table-container">
+                                    <table className="owner-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Medicamento</th>
+                                                <th>Descripción</th>
+                                                <th>Frecuencia</th>
+                                                <th>Estado</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>{pet ? "Antiinflamatorio" : "Sin medicamento"}</td>
+                                                <td>{pet ? "Seguimiento veterinario" : "Sin información"}</td>
+                                                <td>{pet ? "Cada 12 horas" : "--"}</td>
+                                                <td>
+                                                    <span className="status success">
+                                                        {pet ? "Activo" : "Sin dato"}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeItem === "Historial" && (
+                            <div className="owner-section">
+                                <h1>Historial</h1>
+                                <p className="owner-subtitle">Registros médicos de {petName}</p>
+
+                                <div className="owner-table-container">
+                                    {citas.length === 0 ? (
+                                        <div className="owner-empty">Aún no hay historial médico disponible.</div>
+                                    ) : (
+                                        <table className="owner-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Fecha</th>
+                                                    <th>Tipo</th>
+                                                    <th>Veterinario</th>
+                                                    <th>Resultado</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {citas.map((cita) => {
+                                                    const estado = getEstadoCitaLabel(cita.estadoCita);
+                                                    return (
+                                                        <tr key={`historial-${cita.idCita}`}>
+                                                            <td>{formatDate(cita.fecha)}</td>
+                                                            <td>Consulta</td>
+                                                            <td>{cita.nombreVeterinario || "Pendiente"}</td>
+                                                            <td>
+                                                                <span className={`status ${estado.className}`}>
+                                                                    {estado.label}
+                                                                </span>
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })}
+                                            </tbody>
+                                        </table>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {activeItem === "Perfil" && (
+                            <div className="owner-section">
+                                <h1>Perfil</h1>
+                                <p className="owner-subtitle">Datos del propietario</p>
+
+                                <div className="owner-table-container">
+                                    <table className="owner-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Campo</th>
+                                                <th>Detalle</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>Nombre</td>
+                                                <td>{ownerName}</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Correo</td>
+                                                <td>{correo}</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Mascota</td>
+                                                <td>{petName}</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Especie</td>
+                                                <td>{petSpecies}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        )}
+                    </>
+                )}
+            </main>
         </div>
-      </div>
-      
-      {mostrarFormCita && (
-        <div style={{
-          position: "fixed",
-          top: 0, left: 0,
-          width: "100%", height: "100%",
-          backgroundColor: "rgba(0,0,0,0.5)",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          zIndex: 1000
-        }}>
-          <div style={{
-            backgroundColor: "white",
-            padding: "30px",
-            borderRadius: "10px",
-            width: "400px",
-            animation: isClosingModal
-              ? "modalSalida 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards"
-              : "modalEntrada 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards"
-          }}>
-            <h3>Crear Cita</h3>
-            <FormControl fullWidth sx={{ m: 1, minWidth: 200 }}>
-              <InputLabel id="select-mascota-cita-label">Crear Cita para:</InputLabel>
-              <Select
-                labelId="select-mascota-cita-label"
-                value={selectedMascotaCita}
-                label="Crear Cita para:"
-                onChange={(e) => setSelectedMascotaCita(e.target.value)}
-              >
-                <MenuItem value=""><em>Seleccione uno</em></MenuItem>
-                {mascotas.map((m) => (
-                  <MenuItem key={m.idMascota} value={m.idMascota}>{m.nombre}</MenuItem>
-                ))}
-              </Select>
-            
-              <LocalizationProvider dateAdapter={AdapterDayjs}>
-                <p></p>
-                <DatePicker
-                  label="Fecha de la cita"
-                  value={fechaCita}
-                  onChange={(newValue) => setFechaCita(newValue)}
-                />
-                <p></p>
-                <TimePicker
-                  label="Hora de entrada"
-                  value={horaCita}
-                  onChange={(newValue) => setHoraCita(newValue)}
-                />
-                <p></p>
-              </LocalizationProvider>
-            </FormControl>
-
-            <div style={{ display: "flex", gap: "10px", marginTop: "20px" }}>
-              <button className="btnCancelar" onClick={closeModal}>Cancelar</button>
-              <button
-                type="button"
-                onClick={crearCita}
-                disabled={isSubmitting}
-                className="btnCrear"
-              >
-                {isSubmitting ? "Guardando..." : "Guardar"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </>
-  );
+    );
 }
 
-export default MainMenu;
+export default MainMenuDueno;

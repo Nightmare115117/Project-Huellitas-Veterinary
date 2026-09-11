@@ -6,27 +6,36 @@ import "../styles/MainMenu-gestor.css";
 
 function MainMenuGestor() {
   const navigate = useNavigate();
-  const correo = sessionStorage.getItem("Usuario")?.replace(/^"|"$/g, "");
-  const [gestor, setGestor] = useState("");
-  const activeItem = useState("");
+
+  const correo = sessionStorage
+    .getItem("Usuario")
+    ?.replace(/^"|"$/g, "");
+
+  const [gestor, setGestor] = useState(null);
+  const [activeItem, setActiveItem] = useState("");
 
   const handleLogout = () => {
     Swal.fire({
-      title: "Cerrar Sesion",
-      text: "Seguro de querer cerrar sesion?",
+      title: "Cerrar Sesión",
+      text: "¿Seguro de querer cerrar sesión?",
       icon: "question",
       showCancelButton: true,
       confirmButtonColor: "#3085d6",
       cancelButtonColor: "#d33",
+      confirmButtonText: "Sí, cerrar sesión",
+      cancelButtonText: "Cancelar",
     }).then((result) => {
       if (result.isConfirmed) {
+        sessionStorage.clear();
         navigate("/");
-        sessionStorage.clear;
+
         Swal.fire({
-          title: "Sesion cerrada con exito",
-          text: "Hasta Pronto",
-          icon: "success"
-        })
+          title: "Sesión cerrada con éxito",
+          text: "Hasta pronto",
+          icon: "success",
+          timer: 2000,
+          showConfirmButton: false,
+        });
       }
     });
   };
@@ -35,11 +44,11 @@ function MainMenuGestor() {
     if (!correo) {
       Swal.fire({
         title: "Sesión Expirada",
-        text: "Por favor de iniciar sesion nuevamente",
-        icon: "warning", 
+        text: "Por favor, inicia sesión nuevamente",
+        icon: "warning",
         timer: 3000,
         timerProgressBar: true,
-        showConfirmButton: false  
+        showConfirmButton: false,
       }).then(() => {
         navigate("/");
       });
@@ -47,33 +56,107 @@ function MainMenuGestor() {
   }, [correo, navigate]);
 
   useEffect(() => {
-    if (!correo) return
+    if (!correo) return;
+
     fetch(`/api/usuario/Nombre/${correo}`)
-    .then(res => res.json())
-    .then(data => setGestor(data))
-    .catch(err => console.log(err));
-  }, [correo])
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error("No se pudo obtener la información del gestor");
+        }
+
+        return res.json();
+      })
+      .then((data) => setGestor(data))
+      .catch((err) => {
+        console.error(err);
+
+        Swal.fire({
+          title: "Error",
+          text: "No se pudo cargar la información del gestor",
+          icon: "error",
+        });
+      });
+  }, [correo, setGestor]);
 
   return (
-    <>
-      <div className="main-menu">
+    <div className="main-menu">
 
-        <div className={`sidebar primary ${gestor ? "active" : ""}`}>
-          <h2 style={{color: "white"}}>Menú Principal</h2>
-          <h3 style={{color: "white"}}>Bienvenido, {gestor ? gestor.nombre : "Gestor de Sucursal"}</h3>
+      <div className={`sidebar primary ${gestor ? "active" : ""}`}>
+        <h2>Menú Principal</h2>
 
-          <button onClick={handleLogout} className="btn">Cerrar Sesión</button>
-        </div>
+        <h3>
+          Bienvenido,{" "}
+          {gestor ? gestor.nombre : "Gestor de Sucursal"}
+        </h3>
 
-        <div className={`sidebar secondary ${activeItem}`}>
-          {activeItem === "" &&
-            <>
-              
-            </>
-          }
+        <div className="menu-options">
+
+          <button
+            className={`btn ${activeItem === "usuarios" ? "selected" : ""}`}
+            onClick={() => setActiveItem("usuarios")}
+          >
+            Usuarios
+          </button>
+
+          <button
+            className={`btn ${activeItem === "sucursales" ? "selected" : ""}`}
+            onClick={() => setActiveItem("sucursales")}
+          >
+            Sucursal
+          </button>
+
+          <button
+            className={`btn ${activeItem === "reportes" ? "selected" : ""}`}
+            onClick={() => setActiveItem("reportes")}
+          >
+            Reportes
+          </button>
+
+          <button
+            onClick={handleLogout}
+            className="btn logout"
+          >
+            Cerrar Sesión
+          </button>
+
         </div>
       </div>
-    </>
+
+      <div className={`sidebar secondary ${activeItem}`}>
+
+        {activeItem === "" && (
+          <div className="welcome-panel">
+            <h2>Panel del Gestor</h2>
+            <p>
+              Selecciona una opción del menú para comenzar.
+            </p>
+          </div>
+        )}
+
+        {activeItem === "usuarios" && (
+          <div>
+            <h2>Usuarios</h2>
+            <p>Administración de usuarios.</p>
+          </div>
+        )}
+
+        {activeItem === "sucursales" && (
+          <div>
+            <h2>Sucursal</h2>
+            <p>Información y administración de la sucursal.</p>
+          </div>
+        )}
+
+        {activeItem === "reportes" && (
+          <div>
+            <h2>Reportes</h2>
+            <p>Consulta los reportes de la sucursal.</p>
+          </div>
+        )}
+
+      </div>
+
+    </div>
   );
 }
 
