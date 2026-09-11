@@ -15,11 +15,12 @@ function Login() {
   // 🎵 Música mientras Login está montado
   useEffect(() => {
     const mes = new Date().getMonth();
+    const base = import.meta.env.BASE_URL;
     const audioSrc = {
-      1: "/Music/TANK QUINCEAÑERA (PARODIA).mp3",
-      2: "/Music/La mejor música de elevador o ascensor.mp3",
-      7: "/Music/Marcha militar alemana _Erika_ - Subtitulado en Español(MP3_160K).mp3",
-      11: "/Music/Sleigh Ride (Indian Christmas Remix) - Vindaloo Singh.mp3"
+      1: `${base}Music/TANK QUINCEAÑERA (PARODIA).mp3`,
+      2: `${base}Music/La mejor música de elevador o ascensor.mp3`,
+      7: `${base}Music/Marcha militar alemana _Erika_ - Subtitulado en Español(MP3_160K).mp3`,
+      11: `${base}Music/Sleigh Ride (Indian Christmas Remix) - Vindaloo Singh.mp3`
     };
 
     if (audioSrc[mes]) {
@@ -111,7 +112,7 @@ function Login() {
     <div id="app-wrapper">
       <div className="login-container">
         <form className="login-box" onSubmit={handleSubmit}>
-          <img src="/Logo.svg" alt="Logo" className="logo" />
+          <img src={`${import.meta.env.BASE_URL}Logo.svg`} alt="Logo" className="logo" />
           <h2>Iniciar sesión</h2>
 
           <input
