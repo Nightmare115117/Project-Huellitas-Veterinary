@@ -6,7 +6,7 @@ import MainMenuAdministrador from "./components/MainMenu-administrador";
 
 function App() {
   return (
-    <Router>
+    <Router basename="/huellitas">
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/MainMenu/" element={<MainMenuCliente/>} />
