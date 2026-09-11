@@ -1,5 +1,6 @@
 package com.example.Proyect_DevOps.users.services;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -65,7 +66,12 @@ public class UsuarioService {
     }
 
     public List<UsuarioModel> mostrarUsuarios(){
-        return usuarioRepository.findAll();
+        List<UsuarioModel> usuarios = new ArrayList <>();
+        for (UsuarioModel entidad : usuarioRepository.findAll()) {
+            entidad.setContraseña(AESUtil.desencriptar(entidad.getCorreo()));
+            usuarios.add(entidad);
+        }
+        return usuarios;
     }
     
     public UsuarioModel guardaUsuario(UsuarioModel usuario){

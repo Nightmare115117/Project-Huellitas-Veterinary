@@ -4,6 +4,8 @@ import Swal from "sweetalert2";
 import "sweetalert2/dist/sweetalert2.min.css";
 import "../styles/MainMenu-gestor.css";
 
+const API_BASE = import.meta.env.DEV ? "/api" : `${import.meta.env.BASE_URL}api`;
+
 function MainMenuGestor() {
   const navigate = useNavigate();
 
@@ -58,7 +60,7 @@ function MainMenuGestor() {
   useEffect(() => {
     if (!correo) return;
 
-    fetch(`/api/usuario/Nombre/${correo}`)
+    fetch(`${API_BASE}/usuario/Nombre/${correo}`)
       .then((res) => {
         if (!res.ok) {
           throw new Error("No se pudo obtener la información del gestor");

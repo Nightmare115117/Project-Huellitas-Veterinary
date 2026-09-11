@@ -4,6 +4,8 @@ import Swal from "sweetalert2";
 import "sweetalert2/dist/sweetalert2.min.css";
 import "../styles/login.css";
 
+const API_BASE = import.meta.env.DEV ? "/api" : `${import.meta.env.BASE_URL}api`;
+
 function Login() {
   const [user, setUser] = useState("");
   const [contraseña, setContraseña] = useState("");
@@ -52,7 +54,7 @@ function Login() {
     e.preventDefault();
   
     try {
-      const response = await fetch(`/api/usuario/login`, {
+      const response = await fetch(`${API_BASE}/usuario/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -78,7 +80,7 @@ function Login() {
             }
           }
         });
-        fetch(`/api/usuario/Rol?correo=${user}`)
+        fetch(`${API_BASE}/usuario/Rol?correo=${user}`)
         .then(res => res.json())
         .then(data => {
           if (data === 2) {

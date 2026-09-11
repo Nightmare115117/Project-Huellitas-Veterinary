@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/MainMenu-administrador.css";
 
+const API_BASE = import.meta.env.DEV ? "/api" : `${import.meta.env.BASE_URL}api`;
+
 const menuItems = [
     { name: "Inicio", icon: "📊" },
     { name: "Usuarios", icon: "👥" },
@@ -22,7 +24,30 @@ const statusClassMap = {
     Cancelada: "pending",
 };
 
-const normalizeArray = (value) => (Array.isArray(value) ? value : []);
+const extractArrayPayload = (response, fallbackKey) => {
+    if (Array.isArray(response)) return response;
+
+    const candidateKeys = [
+        fallbackKey,
+        "usuarios",
+        "users",
+        "data",
+        "content",
+        "items",
+        "result",
+        "results",
+        "records",
+        "list",
+    ];
+
+    if (response && typeof response === "object") {
+        for (const key of candidateKeys) {
+            if (Array.isArray(response[key])) return response[key];
+        }
+    }
+
+    return [];
+};
 
 const normalizeStatus = (value) => {
     if (!value && value !== 0) return "Activo";
@@ -56,11 +81,11 @@ function MainMenuAdministrador() {
         const fetchData = async () => {
             try {
                 const [perfilRes, usuariosRes, mascotasRes, citasRes, tratamientosRes] = await Promise.all([
-                    fetch(`/api/usuario/Nombre/${correo}`),
-                    fetch(`/api/usuario`),
-                    fetch(`/api/mascota`),
-                    fetch(`/api/cita`),
-                    fetch(`/api/tratamiento`),
+                    fetch(`${API_BASE}/usuario/Nombre/${correo}`),
+                    fetch(`${API_BASE}/usuario`),
+                    fetch(`${API_BASE}/mascota`),
+                    fetch(`${API_BASE}/cita`),
+                    fetch(`${API_BASE}/tratamiento`),
                 ]);
 
                 const perfilData = perfilRes.ok ? await perfilRes.json() : null;
@@ -71,33 +96,33 @@ function MainMenuAdministrador() {
 
                 if (!isMounted) return;
 
-                const users = normalizeArray(usuariosData).map((user) => ({
-                    name: user.nombre || user.name || user.correo || "Sin nombre",
-                    email: user.correo || user.email || "-",
-                    role: user.rol || user.role || user.rolUsuario || "Usuario",
-                    status: normalizeStatus(user.estado || user.status || user.estatus),
+                const users = extractArrayPayload(usuariosData, "usuarios").map((user) => ({
+                    name: user.nombreCompleto || user.nombre || user.name || user.correo || user.email || "Sin nombre",
+                    email: user.correo || user.email || user.username || "-",
+                    role: user.rol?.nombre || user.rol || user.role || user.rolUsuario || "Usuario",
+                    status: normalizeStatus(user.estado || user.status || user.estatus || user.activo),
                 }));
 
-                const pets = normalizeArray(mascotasData).map((pet) => ({
+                const pets = extractArrayPayload(mascotasData, "mascotas").map((pet) => ({
                     name: pet.nombre || pet.name || "Sin nombre",
-                    species: pet.raza?.especie?.nombre || pet.especie || pet.species || "Sin especie",
-                    breed: pet.raza?.nombre || pet.raza || pet.breed || "Sin raza",
-                    owner: pet.dueno || pet.owner || pet.nombreDueno || "Sin dueño",
+                    species: pet.raza?.especie?.nombre || pet.especie || pet.species || pet.tipo || "Sin especie",
+                    breed: pet.raza?.nombre || pet.raza || pet.breed || pet.tipoRaza || "Sin raza",
+                    owner: pet.dueno?.nombre || pet.dueno || pet.owner || pet.nombreDueno || "Sin dueño",
                 }));
 
-                const appointments = normalizeArray(citasData).map((cita) => ({
-                    date: cita.fecha || cita.date || "-",
-                    time: cita.entradaAgendada || cita.hora || cita.time || "-",
+                const appointments = extractArrayPayload(citasData, "citas").map((cita) => ({
+                    date: cita.fecha || cita.date || cita.agenda || "-",
+                    time: cita.entradaAgendada || cita.hora || cita.time || cita.horaCita || "-",
                     pet: cita.mascota?.nombre || cita.pet || cita.nombreMascota || "Sin mascota",
-                    owner: cita.dueno || cita.owner || cita.nombreDueno || "Sin dueño",
-                    status: normalizeStatus(cita.estadoCita || cita.status || cita.estatus || "Pendiente"),
+                    owner: cita.dueno?.nombre || cita.dueno || cita.owner || cita.nombreDueno || "Sin dueño",
+                    status: normalizeStatus(cita.estadoCita || cita.status || cita.estatus || cita.estado || "Pendiente"),
                 }));
 
-                const treatments = normalizeArray(tratamientosData).map((tratamiento) => ({
+                const treatments = extractArrayPayload(tratamientosData, "tratamientos").map((tratamiento) => ({
                     pet: tratamiento.mascota?.nombre || tratamiento.pet || tratamiento.nombreMascota || "Sin mascota",
-                    medicine: tratamiento.medicamento || tratamiento.medicine || tratamiento.nombreMedicamento || "Sin medicamento",
-                    description: tratamiento.descripcion || tratamiento.description || "Sin descripción",
-                    status: normalizeStatus(tratamiento.estado || tratamiento.status || tratamiento.estatus || "Activo"),
+                    medicine: tratamiento.medicamento?.nombre || tratamiento.medicamento || tratamiento.medicine || tratamiento.nombreMedicamento || "Sin medicamento",
+                    description: tratamiento.descripcion || tratamiento.description || tratamiento.observaciones || "Sin descripción",
+                    status: normalizeStatus(tratamiento.estado || tratamiento.status || tratamiento.estatus || tratamiento.activo || "Activo"),
                 }));
 
                 const staff = users.filter((user) => {

@@ -2,6 +2,8 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import "../styles/MainMenu-dueno.css";
 
+const API_BASE = import.meta.env.DEV ? "/api" : `${import.meta.env.BASE_URL}api`;
+
 const formatDate = (value) => {
     if (!value) return "--";
 
@@ -83,9 +85,9 @@ function MainMenuDueno() {
         const fetchData = async () => {
             try {
                 const [perfilRes, mascotasRes, citasRes] = await Promise.all([
-                    fetch(`/api/usuario/Nombre/${correo}`),
-                    fetch(`/api/mascota/${correo}`),
-                    fetch(`/api/cita/${correo}`)
+                    fetch(`${API_BASE}/usuario/Nombre/${correo}`),
+                    fetch(`${API_BASE}/mascota/${correo}`),
+                    fetch(`${API_BASE}/cita/${correo}`)
                 ]);
 
                 if (!perfilRes.ok || !mascotasRes.ok || !citasRes.ok) {
