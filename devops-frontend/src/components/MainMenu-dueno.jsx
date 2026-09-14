@@ -131,18 +131,18 @@ function MainMenuDueno() {
 
     const menuItems = [
         { name: "Inicio", icon: "🏠" },
-        { name: "Mi Mascota", icon: "🐾" },
+        { name: "Mis Mascotas", icon: "🐾" },
         { name: "Citas", icon: "🗓️" },
         { name: "Tratamientos", icon: "💊" },
         { name: "Historial", icon: "📋" },
         { name: "Perfil", icon: "👤" }
     ];
 
-    const pet = mascotas[0] || null;
-    const petName = pet?.nombre || "Mi mascota";
+    const pets = Array.isArray(mascotas) ? mascotas : [];
+    const pet = pets[0] || null;
+    const petName = pet?.nombre || (pets.length > 0 ? "Mis mascotas" : "Mi mascota");
     const petSpecies = pet?.raza?.especie?.nombre || pet?.raza?.nombre || "Sin especie";
-    const petBreed = pet?.raza?.nombre || "Sin raza";
-    const petAge = calcularEdad(pet?.fechaNacimiento);
+    const petListSummary = pets.length > 0 ? pets.map((item) => item.nombre || "Mascota").join(", ") : "Sin mascotas";
     const nextCita = [...citas].sort((a, b) => new Date(a.fecha) - new Date(b.fecha))[0] || null;
 
     const changeMenu = (item) => {
@@ -188,15 +188,15 @@ function MainMenuDueno() {
                         {activeItem === "Inicio" && (
                             <div className="owner-section">
                                 <h1>Panel del dueño</h1>
-                                <p className="owner-subtitle">Resumen de tu mascota y sus cuidados</p>
+                                <p className="owner-subtitle">Resumen de tus mascotas y sus cuidados</p>
 
                                 <div className="owner-cards">
                                     <div className="owner-card">
                                         <span className="owner-card-icon">🐾</span>
                                         <div>
-                                            <h3>Mi mascota</h3>
-                                            <strong>{petName}</strong>
-                                            <p>{petSpecies} · {petBreed}</p>
+                                            <h3>Mis mascotas</h3>
+                                            <strong>{pets.length > 0 ? `${pets.length}` : "0"}</strong>
+                                            <p>{pets.length > 0 ? petListSummary : "Sin mascotas registradas"}</p>
                                         </div>
                                     </div>
 
@@ -265,47 +265,35 @@ function MainMenuDueno() {
                             </div>
                         )}
 
-                        {activeItem === "Mi Mascota" && (
+                        {activeItem === "Mis Mascotas" && (
                             <div className="owner-section">
-                                <h1>Mi mascota</h1>
-                                <p className="owner-subtitle">Información principal de {petName}</p>
+                                <h1>Mis mascotas</h1>
+                                <p className="owner-subtitle">Información principal de tus mascotas</p>
 
-                                {!pet ? (
-                                    <div className="owner-empty">No se encontró una mascota asociada a este usuario.</div>
+                                {!pets.length ? (
+                                    <div className="owner-empty">No se encontró ninguna mascota asociada a este usuario.</div>
                                 ) : (
                                     <div className="owner-table-container">
                                         <table className="owner-table">
                                             <thead>
                                                 <tr>
-                                                    <th>Campo</th>
-                                                    <th>Detalle</th>
+                                                    <th>Nombre</th>
+                                                    <th>Especie</th>
+                                                    <th>Raza</th>
+                                                    <th>Edad</th>
+                                                    <th>Fecha de nacimiento</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                <tr>
-                                                    <td>Nombre</td>
-                                                    <td>{pet.nombre}</td>
-                                                </tr>
-                                                <tr>
-                                                    <td>Especie</td>
-                                                    <td>{petSpecies}</td>
-                                                </tr>
-                                                <tr>
-                                                    <td>Raza</td>
-                                                    <td>{petBreed}</td>
-                                                </tr>
-                                                <tr>
-                                                    <td>Edad</td>
-                                                    <td>{petAge}</td>
-                                                </tr>
-                                                <tr>
-                                                    <td>Fecha de nacimiento</td>
-                                                    <td>{formatDate(pet.fechaNacimiento)}</td>
-                                                </tr>
-                                                <tr>
-                                                    <td>Dueño</td>
-                                                    <td>{ownerName}</td>
-                                                </tr>
+                                                {pets.map((petItem) => (
+                                                    <tr key={petItem.idMascota || `${petItem.nombre}-${petItem.fechaNacimiento}`}>
+                                                        <td>{petItem.nombre}</td>
+                                                        <td>{petItem.raza?.especie?.nombre || petItem.raza?.nombre || petItem.especie || "Sin especie"}</td>
+                                                        <td>{petItem.raza?.nombre || petItem.raza || petItem.breed || "Sin raza"}</td>
+                                                        <td>{calcularEdad(petItem.fechaNacimiento)}</td>
+                                                        <td>{formatDate(petItem.fechaNacimiento)}</td>
+                                                    </tr>
+                                                ))}
                                             </tbody>
                                         </table>
                                     </div>
@@ -452,8 +440,8 @@ function MainMenuDueno() {
                                                 <td>{correo}</td>
                                             </tr>
                                             <tr>
-                                                <td>Mascota</td>
-                                                <td>{petName}</td>
+                                                <td>Mascotas</td>
+                                                <td>{petListSummary}</td>
                                             </tr>
                                             <tr>
                                                 <td>Especie</td>
