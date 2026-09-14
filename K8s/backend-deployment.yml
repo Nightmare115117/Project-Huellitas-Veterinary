@@ -1,26 +1,29 @@
 apiVersion: apps/v1
 kind: Deployment
-
 metadata:
   name: backend
-
 spec:
   replicas: 1
-
   selector:
     matchLabels:
       app: backend
-
   template:
     metadata:
       labels:
         app: backend
-
     spec:
       containers:
         - name: backend
           image: ghcr.io/nightmare115117/devops-proyect:latest
           imagePullPolicy: Always
+
+          resources:
+            requests:
+              memory: "1Gi"
+              cpu: "500m"
+            limits:
+              memory: "2Gi"
+              cpu: "1000m"
 
           ports:
             - containerPort: 8080
@@ -28,6 +31,13 @@ spec:
           env:
             - name: SPRING_PROFILES_ACTIVE
               value: prod
+
+            - name: JAVA_TOOL_OPTIONS
+              value: >-
+                -XX:+UseZGC
+                -XX:+ZGenerational
+                -XX:MaxRAMPercentage=70.0
+                -Xlog:gc*:file=/tmp/gc.log:time,uptime
 
             - name: SPRING_DATASOURCE_URL
               value: jdbc:mariadb://mariadb:3306/huellitas_db
@@ -55,21 +65,3 @@ spec:
                 secretKeyRef:
                   name: huellitas-secrets
                   key: HMAC_SECRET
-
----
-apiVersion: v1
-kind: Service
-
-metadata:
-  name: backend
-
-spec:
-  selector:
-    app: backend
-
-  ports:
-    - protocol: TCP
-      port: 8080
-      targetPort: 8080
-
-  type: ClusterIP
