@@ -142,8 +142,6 @@ function MainMenuDueno() {
     const pet = pets[0] || null;
     const petName = pet?.nombre || (pets.length > 0 ? "Mis mascotas" : "Mi mascota");
     const petSpecies = pet?.raza?.especie?.nombre || pet?.raza?.nombre || "Sin especie";
-    const petBreed = pet?.raza?.nombre || "Sin raza";
-    const petAge = calcularEdad(pet?.fechaNacimiento);
     const petListSummary = pets.length > 0 ? pets.map((item) => item.nombre || "Mascota").join(", ") : "Sin mascotas";
     const nextCita = [...citas].sort((a, b) => new Date(a.fecha) - new Date(b.fecha))[0] || null;
 
