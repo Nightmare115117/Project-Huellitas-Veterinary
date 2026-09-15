@@ -65,3 +65,16 @@ spec:
                 secretKeyRef:
                   name: huellitas-secrets
                   key: HMAC_SECRET
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+spec:
+  type: NodePort
+  selector:
+    app: backend
+  ports:
+    - port: 8080
+      targetPort: 8080
+      nodePort: 30000
