@@ -19,8 +19,9 @@
 - 👨‍👩‍👧‍👦 **Módulo de dueños** con control de múltiples mascotas
 - 🔐 **Seguridad avanzada**: encriptación de datos y generación criptográfica
 - 💊 **Recetas electrónicas** e historial de medicamentos
-- 🎨 **Interfaz intuitiva** con menús laterales y diseño responsive
+- 🎨 **Interfaces intuitivas** con menús laterales, diseño responsive y aplicación móvil Android
 - 📊 **Dashboard** con métricas clave de la clínica
+- 📱 **Acceso móvil por roles**: después del login se muestra el panel correspondiente al administrador, gestor o dueño de la mascota
 
 ---
 
@@ -30,7 +31,8 @@
 | Capa          | Tecnologías                                               |
 | ------------- | --------------------------------------------------------- |
 | **Backend**   | Java 21 (Spring Boot)                                     |
-| **Frontend**  | JavaScript (ES6), HTML5, CSS3, React                      |
+| **Frontend web** | JavaScript (ES6), HTML5, CSS3, React                   |
+| **Aplicación móvil** | Android, Kotlin, Jetpack Compose                   |
 | **Seguridad** | Encriptación personalizada, generación de códigos seguros |
 | **Estilos**   | CSS moderno con menús laterales dinámicos                 |
 
@@ -42,8 +44,29 @@
 ### Requisitos previos
 
 - Java 21
+- Android Studio y JDK 11 para compilar la aplicación móvil
 - Navegador web moderno (Chrome, Firefox, Edge)
 - (Opcional) Git
+
+### Roles de usuario
+
+El sistema dirige a cada usuario al panel correspondiente después del inicio de sesión:
+
+- **Administrador**: gestión general de usuarios, mascotas, citas y reportes.
+- **Gestor**: administración de la sucursal y consulta de reportes.
+- **Dueño de la mascota**: consulta sus mascotas, citas y tratamientos.
+
+En la aplicación móvil, estos roles se identifican mediante el id devuelto por `/usuario/Rol?correo=...`: `1` administrador, `2` dueño de la mascota y `3` gestor.
+
+### Compilar la aplicación móvil
+
+Desde la carpeta `devops-app-mobil`:
+
+```fish
+./gradlew :app:assembleDebug
+```
+
+El APK generado se encuentra en `app/build/outputs/apk/debug/`.
 
 ### Pasos rápidos
 
