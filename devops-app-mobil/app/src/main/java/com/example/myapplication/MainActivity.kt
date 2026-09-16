@@ -62,37 +62,57 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-private suspend fun loginUser(email: String, password: String): Boolean = withContext(Dispatchers.IO) {
-    val url = URL("$API_BASE_URL/usuario/login")
-    val connection = url.openConnection() as HttpURLConnection
-    connection.requestMethod = "POST"
-    connection.doOutput = true
-    connection.doInput = true
-    connection.connectTimeout = 15000
-    connection.readTimeout = 15000
-    connection.setRequestProperty("Content-Type", "application/json; charset=UTF-8")
-    connection.setRequestProperty("Accept", "application/json")
+private suspend fun loginUser(email: String, password: String): Int? = withContext(Dispatchers.IO) {
+    val loginUrl = URL("$API_BASE_URL/usuario/login")
+    val loginConnection = loginUrl.openConnection() as HttpURLConnection
+    loginConnection.requestMethod = "POST"
+    loginConnection.doOutput = true
+    loginConnection.doInput = true
+    loginConnection.connectTimeout = 15000
+    loginConnection.readTimeout = 15000
+    loginConnection.setRequestProperty("Content-Type", "application/json; charset=UTF-8")
+    loginConnection.setRequestProperty("Accept", "application/json")
 
     val payload = """{"correo":"${email}","contrasena":"${password}"}"""
 
     try {
-        connection.outputStream.use { outputStream ->
+        loginConnection.outputStream.use { outputStream ->
             outputStream.write(payload.toByteArray(Charsets.UTF_8))
             outputStream.flush()
         }
 
-        val responseCode = connection.responseCode
+        val responseCode = loginConnection.responseCode
         val responseBody = if (responseCode in 200..299) {
-            connection.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
+            loginConnection.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
         } else {
-            connection.errorStream?.bufferedReader(Charsets.UTF_8)?.use { it.readText() } ?: ""
+            loginConnection.errorStream?.bufferedReader(Charsets.UTF_8)?.use { it.readText() } ?: ""
         }
 
-        responseCode in 200..299 && responseBody.contains("\"login\":true", ignoreCase = true)
+        if (responseCode !in 200..299 || !responseBody.contains("\"login\":true", ignoreCase = true)) {
+            return@withContext null
+        }
     } catch (_: Exception) {
-        false
+        return@withContext null
     } finally {
-        connection.disconnect()
+        loginConnection.disconnect()
+    }
+
+    val roleUrl = URL("$API_BASE_URL/usuario/Rol?correo=${java.net.URLEncoder.encode(email, "UTF-8")}")
+    val roleConnection = roleUrl.openConnection() as HttpURLConnection
+    roleConnection.requestMethod = "GET"
+    roleConnection.connectTimeout = 15000
+    roleConnection.readTimeout = 15000
+    roleConnection.setRequestProperty("Accept", "application/json")
+
+    try {
+        if (roleConnection.responseCode !in 200..299) {
+            return@withContext null
+        }
+        roleConnection.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText().trim().toIntOrNull() }
+    } catch (_: Exception) {
+        null
+    } finally {
+        roleConnection.disconnect()
     }
 }
 
@@ -108,9 +128,15 @@ fun PhoneScreen() {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
+    var roleId by remember { mutableStateOf<Int?>(null) }
     var feedbackText by remember { mutableStateOf("") }
     var feedbackColor by remember { mutableStateOf(Color(0xFF2E7D32)) }
     val scope = rememberCoroutineScope()
+
+    if (roleId != null) {
+        RolePanel(roleId = roleId!!, onLogout = { roleId = null })
+        return
+    }
 
     Box(
         modifier = Modifier
@@ -222,17 +248,15 @@ fun PhoneScreen() {
                             scope.launch {
                                 isLoading = true
                                 feedbackText = ""
-                                val loginOk = loginUser(email, password)
+                                val loggedRoleId = loginUser(email, password)
                                 isLoading = false
-                                feedbackText = if (loginOk) {
-                                    "Login correcto"
+                                if (loggedRoleId != null) {
+                                    roleId = loggedRoleId
+                                    feedbackText = ""
                                 } else {
                                     "Credenciales incorrectas"
-                                }
-                                feedbackColor = if (loginOk) {
-                                    Color(0xFF2E7D32)
-                                } else {
-                                    Color(0xFFB00020)
+                                    feedbackText = "Credenciales incorrectas"
+                                    feedbackColor = Color(0xFFB00020)
                                 }
                             }
                         },
@@ -292,6 +316,65 @@ fun PhoneScreen() {
                     )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun RolePanel(roleId: Int, onLogout: () -> Unit) {
+    val (title, subtitle, actions) = when (roleId) {
+        1 -> Triple(
+            "Panel administrativo",
+            "Gestiona usuarios, mascotas, citas y la operación de Huellitas.",
+            listOf("Usuarios", "Mascotas", "Citas", "Reportes")
+        )
+        3 -> Triple(
+            "Panel del gestor",
+            "Administra la sucursal y consulta sus reportes.",
+            listOf("Usuarios", "Sucursales", "Reportes")
+        )
+        2 -> Triple(
+            "Panel del dueño de la mascota",
+            "Consulta la información de tus mascotas, citas y tratamientos.",
+            listOf("Inicio", "Mis mascotas", "Mis citas", "Tratamientos")
+        )
+        else -> Triple(
+            "Panel de Huellitas",
+            "Tu usuario no tiene un rol configurado.",
+            emptyList()
+        )
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .padding(24.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Text(
+            text = "Huellitas",
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary
+        )
+        Text(text = title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+        Text(text = subtitle, style = MaterialTheme.typography.bodyLarge)
+
+        actions.forEach { action ->
+            Button(
+                onClick = { },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp)
+            ) {
+                Text(action)
+            }
+        }
+
+        Spacer(modifier = Modifier.weight(1f))
+        TextButton(onClick = onLogout, modifier = Modifier.align(Alignment.CenterHorizontally)) {
+            Text("Cerrar sesión")
         }
     }
 }
