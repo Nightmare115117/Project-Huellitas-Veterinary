@@ -1,5 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import Swal from "sweetalert2";
+import "sweetalert2/dist/sweetalert2.min.css";
 import "../styles/MainMenu-dueno.css";
 
 const API_BASE = import.meta.env.DEV ? "/api" : `${import.meta.env.BASE_URL}api`;
@@ -125,8 +127,28 @@ function MainMenuDueno() {
     }, [correo, navigate]);
 
     const handleLogout = () => {
-        sessionStorage.clear();
-        navigate("/");
+        Swal.fire({
+            title: "Cerrar Sesión",
+            text: "¿Seguro de querer cerrar sesión?",
+            icon: "question",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Sí, cerrar sesión",
+            cancelButtonText: "Cancelar",
+        }).then((result) => {
+            if (result.isConfirmed) {
+                sessionStorage.clear();
+                navigate("/");
+                Swal.fire({
+                    title: "Sesión cerrada con éxito",
+                    text: "Hasta pronto",
+                    icon: "success",
+                    timer: 2000,
+                    showConfirmButton: false,
+                });
+            }
+        });
     };
 
     const menuItems = [
