@@ -1,11 +1,10 @@
 package com.example.Proyect_DevOps.utilities;
 
-import org.springframework.stereotype.Service;
+//import org.springframework.stereotype.Service;
 
 import io.github.cdimascio.dotenv.Dotenv;
 import io.github.cdimascio.dotenv.DotenvException;
-
-@Service 
+ 
 public class JWTUtil {
 
     private static final String KEY = obtenerClave();
