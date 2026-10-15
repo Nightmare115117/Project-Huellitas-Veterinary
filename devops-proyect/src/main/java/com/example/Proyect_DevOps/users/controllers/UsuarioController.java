@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.example.Proyect_DevOps.users.models.RolModel;
 import com.example.Proyect_DevOps.users.models.UsuarioModel;
@@ -19,6 +20,7 @@ import com.example.Proyect_DevOps.users.services.UsuarioService;
 
 
 @RestController
+@RestControllerAdvice 
 @RequestMapping("/usuario")
 public class UsuarioController {
 

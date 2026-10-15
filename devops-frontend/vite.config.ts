@@ -10,7 +10,7 @@ export default defineConfig(({ mode }) => {
         babel: {
           plugins: [['babel-plugin-react-compiler']],
         },
-      })
+      }),
     ],
     server: {
       host: '0.0.0.0',
@@ -20,12 +20,12 @@ export default defineConfig(({ mode }) => {
         '/api': {
           target: env.VITE_BACKEND_URL || 'http://localhost:8080',
           changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/api/, '')
-        }
-      }
+          rewrite: (path: string) => path.replace(/^\/api/, ''),
+        },
+      },
     },
     preview: {
-      allowedHosts: ['.local']
-    }
+      allowedHosts: ['.local'],
+    },
   }
 })

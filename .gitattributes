@@ -3,3 +3,5 @@ devops-gateway/*.cmd text eol=crlf
 
 devops-proyect/mvnw text eol=lf
 devops-proyect/*.cmd text eol=crlf
+devops-frontend-ts.zip
+devops-frontend.zip

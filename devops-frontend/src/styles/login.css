@@ -1,173 +1,91 @@
-html body {
-  margin: 0;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* para evitar scroll si las sidebars se salen */
+.login {
+  min-height: 100dvh;
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  background: var(--bg);
 }
 
-#app-wrapper {
-  overflow: hidden;
-  height: 100vh;
-  width: 100vw;
-}
-
-.login-container {
+/* Panel de marca (escritorio) */
+.login__brand {
   position: relative;
-  height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  --mouse-x: 50%;
-  --mouse-y: 50%;
-
-  background:
-    radial-gradient(
-      400px circle at var(--mouse-x) var(--mouse-y),
-      rgba(255, 0, 150, 0.3),
-      transparent 40%
-    ),
-    linear-gradient(135deg, #1e355f, #7a0f2d);
-
-  background-size: auto, 200% 200%;
-  animation: fondoAnimado 12s ease infinite;
-}
-
-@keyframes fondoAnimado {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
-}
-
-
-@keyframes abrir {
-  from {
-    transform: rotateY(90deg);
-    opacity: 0;
-  }
-  to {
-    transform: rotateY(0deg);
-    opacity: 1;
-  }
-}
-
-.login-box, .logo, .login-box h2, .login-box input, .login-box button{
-  transform-origin: left;
-  animation: abrir 0.6s ease forwards;
-}
-
-
-.login-box {
-  background: lightgray;
-  padding: 30px;
-  width: 320px;
-  border-radius: 10px;
-  box-shadow: 0 20px 50px rgba(0,0,0,0.4);
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
+  padding: var(--space-7);
+  overflow: hidden;
+  background:
+    radial-gradient(700px 480px at 100% 100%, rgba(196, 54, 74, 0.45), transparent 65%),
+    radial-gradient(600px 420px at 0% 0%, rgba(42, 102, 212, 0.5), transparent 65%),
+    linear-gradient(160deg, #0f2250 0%, #0a1630 55%, #1a0d1f 100%);
 }
 
-.logo {
-  width: 150px;
-  margin-bottom: 5px;
-  align-self: center;
+.login__hero {
+  max-width: 480px;
 }
 
-.login-box h2 {
-  text-align: center;
-  margin-bottom: 20px;
+.login__hero h1 {
+  font-size: clamp(32px, 3.4vw, 46px);
+  line-height: 1.12;
 }
 
-.login-box input {
-  margin-bottom: 15px;
-  padding: 10px;
-  font-size: 14px;
-  border-radius: 5px;
-  border: 1px solid #ccc;
+.login__hero p {
+  margin-top: var(--space-4);
+  font-size: 18px;
+  color: var(--text-muted);
 }
 
-input[type="number"]::-webkit-outer-spin-button,
-  input[type="number"]::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
+/* Panel del formulario */
+.login__panel {
+  display: grid;
+  place-items: center;
+  padding: var(--space-5);
+}
+
+.login-card {
+  width: min(100%, 420px);
+  padding: var(--space-6);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-pop);
+}
+
+.login-card__logo {
+  display: none;
+  margin-bottom: var(--space-4);
+}
+
+.login-card__logo .brand {
+  justify-content: center;
+}
+
+.login-card h2 {
+  font-size: 28px;
+}
+
+.login-card__lead {
+  margin: var(--space-1) 0 var(--space-5);
+  color: var(--text-muted);
+}
+
+.login-card .btn {
+  margin-top: var(--space-2);
+}
+
+@media (max-width: 900px) {
+  .login {
+    grid-template-columns: minmax(0, 1fr);
+    background:
+      radial-gradient(520px 360px at 100% 0%, rgba(42, 102, 212, 0.3), transparent 65%),
+      radial-gradient(480px 340px at 0% 100%, rgba(196, 54, 74, 0.25), transparent 65%),
+      var(--bg);
   }
 
-input[type="number"] {
--moz-appearance: textfield;
-appearance: textfield;
-}
+  .login__brand {
+    display: none;
+  }
 
-.login-box button {
-  padding: 10px;
-  border: none;
-  border-radius: 5px;
-  background: #2c2c54;
-  color: lightgray;
-  font-size: 15px;
-  cursor: pointer;
-  margin-top: 10px;
-}
-
-.custom-checkbox {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 10px;
-  font-size: 14px;
-  cursor: pointer;
-  position: relative;
-}
-
-.login-box button:hover {
-  background: #1e1e2f;
-}
-
-.custom-checkbox input[type="checkbox"] {
-  position : absolute;
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-.custom-checkbox input {
-  display: none;
-}
-
-.checkmark {
-  width: 18px;
-  height: 18px;
-  border-radius: 5px;
-  border: 2px solid #3b3561; /* mismo tono del botón */
-  background: white;
-  position: relative;
-  transition: all 0.2s ease;
-}
-
-/* Estado activo */
-.custom-checkbox input:checked + .checkmark {
-  background-color: #3b3561;
-  border-color: #3b3561;
-  transform: scale(1.05);
-}
-
-/* Palomita */
-.checkmark::after {
-  content: "";
-  position: absolute;
-  display: none;
-  left: 5px;
-  top: 1px;
-  width: 5px;
-  height: 10px;
-  border: solid white;
-  border-width: 0 2px 2px 0;
-  transform: rotate(45deg);
-}
-
-.custom-checkbox input:checked + .checkmark::after {
-  display: block;
+  .login-card__logo {
+    display: block;
+  }
 }

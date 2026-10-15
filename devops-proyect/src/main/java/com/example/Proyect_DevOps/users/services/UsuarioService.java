@@ -112,4 +112,15 @@ public class UsuarioService {
             return "User not found";
         }
     }
+
+    public UsuarioModel fingById(int Id) {
+        Optional<UsuarioModel> entity = usuarioRepository.findById(Id);
+        UsuarioModel entidad = entity.get();
+        entidad.setCorreo(AESUtil.desencriptar(entidad.getCorreo()));
+        return entidad;
+    }
+
+    public void removerUsuario(int id) {
+        usuarioRepository.deleteById(id);
+    }
 }
