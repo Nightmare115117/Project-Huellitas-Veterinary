@@ -2,7 +2,7 @@
 
 [![Java](https://img.shields.io/badge/Java-21-orange)](https://www.java.com/)
 [![Spring-Boot](https://img.shields.io/badge/Spring_boot-orange)](https://spring.io/projects/spring-boot)
-[![JavaScript](https://img.shields.io/badge/JavaScript-ES6-yellow)](https://developer.mozilla.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-7-blue)](https://www.typescriptlang.org/)
 [![CSS](https://img.shields.io/badge/CSS-3-blue)](https://www.w3.org/Style/CSS/)
 [![React](https://img.shields.io/badge/React-blue)](https://es.react.dev/)
 [![License](https://img.shields.io/badge/Licencia-MIT-green)](LICENSE)
