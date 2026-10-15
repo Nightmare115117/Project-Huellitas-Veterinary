@@ -1,10 +1,17 @@
 package com.example.Proyect_DevOps.utilities;
+
 import java.nio.charset.StandardCharsets;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.HexFormat;
 
+import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
@@ -21,75 +28,47 @@ public class AESUtil {
     private static final int IV_LENGTH = 12;
     private static final int TAG_LENGTH = 128;
 
-    public static void validarAESKey() {
+    private static String obtenerKey() {
         try {
             Dotenv dotenv = Dotenv.load();
-            String key = dotenv.get("AES_SECRET");
-        
-            if (key == null || key.isBlank()) {
-                throw new IllegalStateException(
-                    "La variable de entorno AES_SECRET no está configurada"
-                );
-            }
-
-            if (!key.matches("[0-9a-fA-F]{64}")) {
-                throw new IllegalStateException(
-                    "AES_SECRET debe ser una cadena hexadecimal de 64 caracteres"
-                );
-            }
+            return  dotenv.get("AES_SECRET");
         } catch (DotenvException e) {
-            String key = System.getenv("AES_SECRET");
-            
-            if (key == null || key.isBlank()) {
-                throw new IllegalStateException(
-                    "La variable de entorno AES_SECRET no está configurada"
-                );
-            }
-
-            if (!key.matches("[0-9a-fA-F]{64}")) {
-                throw new IllegalStateException(
-                    "AES_SECRET debe ser una cadena hexadecimal de 64 caracteres"
-                );
-            }
-        }   
+            return System.getenv("AES_SECRET");
+        }
     }
 
+    public static void validarAESKey() {
+        String key = obtenerKey();
+
+        if (key == null || key.isBlank()) {
+            throw new IllegalStateException(
+                "La variable de entorno AES_SECRET no está configurada"
+            );
+        }
+
+        if (!key.matches("[0-9a-fA-F]{64}")) {
+            throw new IllegalStateException(
+                "AES_SECRET debe ser una cadena hexadecimal de 64 caracteres"
+            );
+        }
+    }   
+
     private static String obtenerClave() {
-        try {
-            Dotenv dotenv = Dotenv.load();
-            String key = dotenv.get("AES_SECRET");
-        
-            if (key == null || key.isBlank()) {
-                throw new IllegalStateException(
-                    "La variable de entorno AES_SECRET no está configurada"
-                );
-            }
+        String key = obtenerKey();
 
-            if (!key.matches("[0-9a-fA-F]{64}")) {
-                throw new IllegalStateException(
-                    "AES_SECRET debe ser una cadena hexadecimal de 64 caracteres"
-                );
-            }
+        if (key == null || key.isBlank()) {        
+            throw new IllegalStateException(
+                "La variable de entorno AES_SECRET no está configurada"
+            );
+        }
 
-            return key;
+        if (!key.matches("[0-9a-fA-F]{64}")) {
+            throw new IllegalStateException(
+                "AES_SECRET debe ser una cadena hexadecimal de 64 caracteres"
+            );
+        }
 
-        } catch (DotenvException e) {
-            String key = System.getenv("AES_SECRET");
-            
-            if (key == null || key.isBlank()) {
-                throw new IllegalStateException(
-                    "La variable de entorno AES_SECRET no está configurada"
-                );
-            }
-
-            if (!key.matches("[0-9a-fA-F]{64}")) {
-                throw new IllegalStateException(
-                    "AES_SECRET debe ser una cadena hexadecimal de 64 caracteres"
-                );
-            }
-
-            return key;
-        }   
+        return key;
     }
 
     public static String encriptar(String dato) {
@@ -110,7 +89,8 @@ public class AESUtil {
             System.arraycopy(cifrado, 0, resultado, IV.length, cifrado.length);
 
             return Base64.getEncoder().encodeToString(resultado);
-        } catch (Exception e) {
+        } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | InvalidAlgorithmParameterException |
+            IllegalBlockSizeException | BadPaddingException | IllegalArgumentException e) {
             throw new RuntimeException("Error al encriptar", e);
         }
     }
@@ -131,7 +111,8 @@ public class AESUtil {
             cipher.init(Cipher.DECRYPT_MODE, key, parametros);
 
             return new String(cipher.doFinal(cifrado), StandardCharsets.UTF_8);
-        } catch (Exception e) {
+        } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | InvalidAlgorithmParameterException |
+            IllegalBlockSizeException | BadPaddingException | IllegalArgumentException e) {
             throw new RuntimeException("Error al desencriptar", e);
         }
     }
