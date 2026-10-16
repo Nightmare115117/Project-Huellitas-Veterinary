@@ -63,6 +63,14 @@ public class ConsultaMedicaModel {
         this.idConsulta = idConsulta;
     }
 
+    public int getIdConsulta(){
+        return idConsulta;
+    }
+
+    public void setIdConsulta(int idConsulta){
+        this.idConsulta = idConsulta;
+    }
+
     public String getMotivo(){
         return motivo;
     }

@@ -16,10 +16,11 @@ import com.example.Proyect_DevOps.mascotas.models.MascotaModel;
 import com.example.Proyect_DevOps.mascotas.repositories.MascotaRepository;
 import com.example.Proyect_DevOps.users.models.UsuarioModel;
 import com.example.Proyect_DevOps.users.repositories.UsuarioRepository;
+import com.example.Proyect_DevOps.common.services.GenericServiceImpl;
 import com.example.Proyect_DevOps.utilities.HMACUtil;
 
 @Service
-public class CitaService {
+public class CitaService extends GenericServiceImpl<CitaModel, Integer, CitaRepository> {
 
     private CitaDTO convertirADTO(CitaModel citaM) {
         String nombreVeterinario =

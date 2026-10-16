@@ -51,6 +51,14 @@ public class CiudadModel {
     public void setIdEstado(EstadoModel idEstado) {
         this.idEstado = idEstado;
     }
+
+    public EstadoModel getEstado() {
+        return idEstado;
+    }
+
+    public void setEstado(EstadoModel estado) {
+        this.idEstado = estado;
+    }
     
     @Override
     public String toString() {

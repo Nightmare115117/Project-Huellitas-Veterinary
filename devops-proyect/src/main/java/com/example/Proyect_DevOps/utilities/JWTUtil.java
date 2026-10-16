@@ -1,41 +1,37 @@
 package com.example.Proyect_DevOps.utilities;
 
-//import org.springframework.stereotype.Service;
+import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 
-import io.github.cdimascio.dotenv.Dotenv;
-import io.github.cdimascio.dotenv.DotenvException;
- 
+import org.springframework.security.oauth2.jwt.JwtEncoder;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
+import org.springframework.stereotype.Service;
+
+@Service
 public class JWTUtil {
 
-    private static final String KEY = obtenerClave();
+    private final JwtEncoder encoder;
 
-    private static String obtenerKey() {
-        try {
-            Dotenv dotenv = Dotenv.load();
-            return  dotenv.get("JWT_SECRET");
-        } catch (DotenvException e) {
-            return System.getenv("JWT_SECRET");
-        }
+    public JWTUtil (JwtEncoder encoder) {
+        this.encoder = encoder;
     }
 
-    private static String obtenerClave() {
-        String key = obtenerKey();
+    public String generarToken(String username, int rol, String rolname) {
 
-        if (key == null || key.isBlank()) {        
-            throw new IllegalStateException(
-                "La variable de entorno JWT_SECRET no está configurada"
-            );
-        }
+        java.time.Instant ahora = java.time.Instant.now();
+        java.time.Instant expiracion = ahora.plus(java.time.Duration.ofMinutes(15));
 
-        if (!key.matches("[0-9a-fA-F]{64}")) {
-            throw new IllegalStateException(
-                "JWT_SECRET debe ser una cadena hexadecimal de 64 caracteres"
-            );
-        }
+        JwtClaimsSet claims = JwtClaimsSet.builder()
+        .subject(username)
+        .issuedAt(ahora)
+        .expiresAt(expiracion)
+        .claim("role_id", rol)
+        .claim("roles", rolname)
+        .build();
 
-        return key;
+        JwtEncoderParameters parameters = JwtEncoderParameters.from(claims);
+
+        Jwt result = encoder.encode(parameters);
+        return result.getTokenValue();
     }
-
-    
-   
 }

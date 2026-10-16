@@ -48,8 +48,16 @@ public class SucursalModel {
         this.gestor = gestor;
     }
 
+    public DireccionModel getDireccion() {
+        return direccion;
+    }
+
+    public void setDireccion(DireccionModel direccion) {
+        this.direccion = direccion;
+    }
+
     @Override
     public String toString() {
-        return "idSucursal=" + idSucursal + ", direccion=" + direccion.getIdDireccion() + ", gestor=" + gestor.getIdGestor();
+        return "idSucursal=" + idSucursal + ", direccion=" + (direccion != null ? direccion.getIdDireccion() : "null") + ", gestor=" + (gestor != null ? gestor.getIdGestor() : "null");
     }
 }
