@@ -8,6 +8,7 @@ export type Rol = (typeof Rol)[keyof typeof Rol]
 
 export interface LoginResponse {
   login: boolean
+  token: string
 }
 
 export interface Perfil {
