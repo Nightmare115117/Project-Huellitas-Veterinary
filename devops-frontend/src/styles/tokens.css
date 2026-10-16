@@ -13,6 +13,14 @@
   --line-strong: #35496b;
   --input-border: #5b7299; /* ≥3:1 sobre el fondo (WCAG 1.4.11) */
 
+  /* Vidrio (glassmorfismo): superficies translúcidas sobre el fondo con luces */
+  --glass: rgba(18, 30, 53, 0.55);
+  --glass-strong: rgba(18, 30, 53, 0.72);
+  --glass-hover: rgba(40, 62, 104, 0.5);
+  --glass-border: rgba(255, 255, 255, 0.14);
+  --glass-blur: blur(18px) saturate(160%);
+  --glass-shine: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+
   /* Texto */
   --text: #e8eef8;
   --text-muted: #a3b1c8;
@@ -54,7 +62,7 @@
   --radius-sm: 10px;
   --radius-md: 14px;
   --radius-lg: 20px;
-  --shadow-card: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 8px 24px rgba(2, 6, 16, 0.35);
+  --shadow-card: var(--glass-shine), 0 8px 32px rgba(2, 6, 16, 0.4);
   --shadow-pop: 0 24px 60px rgba(2, 6, 16, 0.55);
 
   /* Movimiento */

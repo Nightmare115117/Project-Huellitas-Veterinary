@@ -11,7 +11,12 @@ html {
 body {
   margin: 0;
   min-height: 100dvh;
-  background: var(--bg);
+  background:
+    radial-gradient(640px 520px at 12% 8%, rgba(42, 102, 212, 0.55), transparent 65%),
+    radial-gradient(560px 480px at 88% 22%, rgba(196, 54, 74, 0.4), transparent 65%),
+    radial-gradient(700px 560px at 55% 100%, rgba(110, 160, 247, 0.28), transparent 65%),
+    var(--bg);
+  background-attachment: fixed;
   color: var(--text);
   font-family: var(--font-body);
   font-size: 16px;
@@ -85,6 +90,37 @@ img {
 
 .skip-link:focus {
   transform: translateY(0);
+}
+
+/* Receta de vidrio compartida por todas las superficies */
+.glass,
+.panel,
+.stat,
+.user-card,
+.icon-btn,
+.login-card,
+.sidebar,
+.topbar,
+.swal-popup {
+  background: var(--glass);
+  border-color: var(--glass-border);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+}
+
+/* Sin soporte de blur, o si el usuario pide menos transparencia: superficie opaca */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root {
+    --glass: var(--surface);
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  :root {
+    --glass: var(--surface);
+    --glass-strong: var(--surface);
+    --glass-blur: none;
+  }
 }
 
 .muted {
