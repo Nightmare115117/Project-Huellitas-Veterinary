@@ -16,13 +16,13 @@ public class JWTUtil {
         this.encoder = encoder;
     }
 
-    public String generarToken(String username, int rol, String rolname) {
+    public String generarToken(String correo, int rol, String rolname) {
 
         java.time.Instant ahora = java.time.Instant.now();
         java.time.Instant expiracion = ahora.plus(java.time.Duration.ofMinutes(15));
 
         JwtClaimsSet claims = JwtClaimsSet.builder()
-        .subject(username)
+        .subject(correo)
         .issuedAt(ahora)
         .expiresAt(expiracion)
         .claim("role_id", rol)
