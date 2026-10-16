@@ -5,6 +5,8 @@ import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
+import org.springframework.security.oauth2.jwt.JwsHeader;
+import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -29,7 +31,8 @@ public class JWTUtil {
         .claim("roles", rolname)
         .build();
 
-        JwtEncoderParameters parameters = JwtEncoderParameters.from(claims);
+        JwsHeader header = JwsHeader.with(MacAlgorithm.HS256).build();
+        JwtEncoderParameters parameters = JwtEncoderParameters.from(header, claims);
 
         Jwt result = encoder.encode(parameters);
         return result.getTokenValue();
