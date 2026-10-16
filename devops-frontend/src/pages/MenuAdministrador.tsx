@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import {
   CalendarDays,
+  Database,
   LayoutDashboard,
   PawPrint,
   Pill,
@@ -9,6 +10,7 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import AppShell, { type NavItem } from '../components/layout/AppShell'
+import CrudSection from '../components/ui/CrudSection'
 import DataTable, { type Column } from '../components/ui/DataTable'
 import LoadingState from '../components/ui/LoadingState'
 import PageHeader from '../components/ui/PageHeader'
@@ -35,7 +37,7 @@ import { formatDate, formatTime } from '../lib/format'
 import { extractArray } from '../lib/normalize'
 import type { Perfil } from '../types/api'
 
-type Section = 'inicio' | 'usuarios' | 'mascotas' | 'citas' | 'tratamientos' | 'personal'
+type Section = 'inicio' | 'usuarios' | 'mascotas' | 'citas' | 'tratamientos' | 'personal' | 'tablas'
 
 const navItems: (NavItem & { id: Section })[] = [
   { id: 'inicio', label: 'Inicio', icon: LayoutDashboard },
@@ -44,6 +46,7 @@ const navItems: (NavItem & { id: Section })[] = [
   { id: 'citas', label: 'Citas', icon: CalendarDays },
   { id: 'tratamientos', label: 'Tratamientos', icon: Pill },
   { id: 'personal', label: 'Personal', icon: Stethoscope },
+  { id: 'tablas', label: 'Tablas', icon: Database },
 ]
 
 interface RecentActivity {
@@ -299,6 +302,13 @@ export default function MenuAdministrador() {
                   emptyMessage="No hay personal disponible."
                 />
               </Panel>
+            </>
+          )}
+
+          {active === 'tablas' && (
+            <>
+              <PageHeader title="Tablas" subtitle="Crear, editar y eliminar registros de cualquier tabla" />
+              <CrudSection />
             </>
           )}
         </Reveal>
