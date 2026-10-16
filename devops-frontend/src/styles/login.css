@@ -2,7 +2,6 @@
   min-height: 100dvh;
   display: grid;
   grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
-  background: var(--bg);
 }
 
 /* Panel de marca (escritorio) */
@@ -13,10 +12,6 @@
   justify-content: space-between;
   padding: var(--space-7);
   overflow: hidden;
-  background:
-    radial-gradient(700px 480px at 100% 100%, rgba(196, 54, 74, 0.45), transparent 65%),
-    radial-gradient(600px 420px at 0% 0%, rgba(42, 102, 212, 0.5), transparent 65%),
-    linear-gradient(160deg, #0f2250 0%, #0a1630 55%, #1a0d1f 100%);
 }
 
 .login__hero {
@@ -44,10 +39,10 @@
 .login-card {
   width: min(100%, 420px);
   padding: var(--space-6);
-  border: 1px solid var(--line);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
-  background: var(--surface);
-  box-shadow: var(--shadow-pop);
+  background: var(--glass-strong);
+  box-shadow: var(--glass-shine), var(--shadow-pop);
 }
 
 .login-card__logo {
@@ -75,10 +70,6 @@
 @media (max-width: 900px) {
   .login {
     grid-template-columns: minmax(0, 1fr);
-    background:
-      radial-gradient(520px 360px at 100% 0%, rgba(42, 102, 212, 0.3), transparent 65%),
-      radial-gradient(480px 340px at 0% 100%, rgba(196, 54, 74, 0.25), transparent 65%),
-      var(--bg);
   }
 
   .login__brand {
