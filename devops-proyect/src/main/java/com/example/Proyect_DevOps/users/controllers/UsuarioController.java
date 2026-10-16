@@ -2,7 +2,6 @@ package com.example.Proyect_DevOps.users.controllers;
 
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,18 +22,9 @@ import com.example.Proyect_DevOps.utilities.JWTUtil;
 public class UsuarioController extends GenericController<UsuarioModel, Integer, UsuarioService> {
 
     private final JWTUtil jwtUtil;
-    
-    @Autowired 
-    private UsuarioService service;
 
     public UsuarioController(JWTUtil jwtUtil) {
         this.jwtUtil = jwtUtil;
-    }
-
-    @PostMapping("/guardar")
-    public ResponseEntity<UsuarioModel> guardarUsuario(@RequestBody UsuarioModel usuario) {
-        UsuarioModel guardado = service.guardaUsuario(usuario);
-        return ResponseEntity.status(HttpStatus.CREATED).body(guardado);
     }
 
     @PostMapping("/login")

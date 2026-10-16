@@ -38,19 +38,7 @@ public class AESUtil {
     }
 
     public static void validarAESKey() {
-        String key = obtenerKey();
-
-        if (key == null || key.isBlank()) {
-            throw new IllegalStateException(
-                "La variable de entorno AES_SECRET no está configurada"
-            );
-        }
-
-        if (!key.matches("[0-9a-fA-F]{64}")) {
-            throw new IllegalStateException(
-                "AES_SECRET debe ser una cadena hexadecimal de 64 caracteres"
-            );
-        }
+        obtenerClave();
     }   
 
     private static String obtenerClave() {
