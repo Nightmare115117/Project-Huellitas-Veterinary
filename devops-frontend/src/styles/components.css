@@ -359,6 +359,65 @@
   color: var(--text);
 }
 
+/* ── CRUD genérico ── */
+.crud-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+.crud-bar .field {
+  margin-bottom: 0;
+  min-width: min(100%, 260px);
+}
+
+.select {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 var(--space-4);
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-sm);
+  background: rgba(6, 12, 24, 0.45);
+}
+
+.select:hover {
+  border-color: var(--blue-400);
+}
+
+.select:focus-visible {
+  outline: none;
+  border-color: var(--blue-400);
+  box-shadow: 0 0 0 3px rgba(110, 160, 247, 0.3);
+}
+
+.select option {
+  background: var(--surface);
+  color: var(--text);
+}
+
+.crud-cell {
+  display: block;
+  max-width: 28ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.row-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.icon-btn--danger:hover {
+  border-color: var(--red-600);
+  background: var(--red-tint);
+  color: var(--red-300);
+}
+
 /* ── SweetAlert2 con el tema de la app ── */
 .swal2-container.swal2-backdrop-show,
 .swal2-container.swal2-noanimation {
@@ -381,6 +440,18 @@
   font-family: var(--font-display);
   font-size: 24px;
   color: var(--text);
+}
+
+.swal-popup .swal2-textarea {
+  min-height: 260px;
+  margin: var(--space-4) 0 0;
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-sm);
+  background: rgba(6, 12, 24, 0.45);
+  color: var(--text);
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 14px;
+  line-height: 1.5;
 }
 
 .swal-text {

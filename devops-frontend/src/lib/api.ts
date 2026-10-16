@@ -35,3 +35,17 @@ export async function apiPost<TBody, TResponse>(
   })
   return (await res.json()) as TResponse
 }
+
+/** POST/PUT/DELETE que lanza ApiError si la respuesta no es 2xx */
+export async function apiSend(
+  method: 'POST' | 'PUT' | 'DELETE',
+  path: string,
+  body?: unknown,
+): Promise<void> {
+  const res = await fetch(`${API_BASE}${path}`, {
+    method,
+    headers: body === undefined ? undefined : { 'Content-Type': 'application/json' },
+    body: body === undefined ? undefined : JSON.stringify(body),
+  })
+  if (!res.ok) throw new ApiError(`${method} ${path} falló`, res.status)
+}
