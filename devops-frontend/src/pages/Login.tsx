@@ -59,15 +59,23 @@ export default function Login() {
       const data = await apiPost<LoginBody, LoginResponse>('/usuario/login', {
         correo: user,
         contrasena,
-      })
-
-      
+      })      
 
       if (data.login !== true) {
         sacudir()
         void alerts.loginError()
         return
       }
+
+      if (data.login !== true || !data.token) {
+        sacudir()
+        void alerts.loginError()
+        return
+      }
+
+      sessionStorage.setItem('token', data.token)
+      setCorreo(user)
+      void alerts.loginOk()
 
       setCorreo(user)
       void alerts.loginOk()
