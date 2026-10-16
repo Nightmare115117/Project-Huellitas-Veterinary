@@ -87,6 +87,10 @@ public class CitaModel {
         this.mascotaModel = mascotaModel;
     }
 
+    public void setMascotaModel(MascotaModel mascotaModel){
+        this.mascotaModel = mascotaModel;
+    }
+
     public UsuarioModel getUsuarioMascota(){
         return usuarioMascota;
     }

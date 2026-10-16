@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.example.Proyect_DevOps.common.services.GenericServiceImpl;
 import com.example.Proyect_DevOps.mascotas.dtos.MascotaDTO;
 import com.example.Proyect_DevOps.mascotas.models.MascotaModel;
 import com.example.Proyect_DevOps.mascotas.repositories.MascotaRepository;
@@ -17,10 +18,7 @@ import com.example.Proyect_DevOps.users.repositories.UsuarioRepository;
 import com.example.Proyect_DevOps.utilities.HMACUtil;
 
 @Service
-public class MascotaService {
-
-    @Autowired
-    private MascotaRepository mascotaRepository;
+public class MascotaService extends GenericServiceImpl<MascotaModel, Integer, MascotaRepository> {
 
     @Autowired
     private UsuarioRepository user;
@@ -38,8 +36,8 @@ public class MascotaService {
         Optional<UsuarioModel> usuarioOpt = user.findByCorreoHMAC(HMACUtil.GenerarHuella(correo));
         if (usuarioOpt.isPresent()){
             UsuarioModel usuario = usuarioOpt.get();
-            List<MascotaModel> mascotasModels = mascotaRepository.findByUsuario(usuario);
-            List<MascotaDTO> mascotasDTOs = new ArrayList <>();
+            List<MascotaModel> mascotasModels = repository.findByUsuario(usuario);
+            List<MascotaDTO> mascotasDTOs = new ArrayList<>();
             for (MascotaModel elemento : mascotasModels){
                 mascotasDTOs.add(convertirADTO(elemento));
             } 
@@ -53,7 +51,7 @@ public class MascotaService {
         Optional<UsuarioModel> usuarioOpt = user.findByCorreoHMAC(HMACUtil.GenerarHuella(correo));
         if (usuarioOpt.isPresent()){
             UsuarioModel usuario = usuarioOpt.get();
-            return mascotaRepository.countByUsuario(usuario);
+            return repository.countByUsuario(usuario);
         } else {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado");
         }

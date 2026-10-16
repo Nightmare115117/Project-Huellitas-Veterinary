@@ -2,11 +2,10 @@ package com.example.myapplication
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -18,14 +17,11 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -34,14 +30,22 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.myapplication.ui.GlassBackground
+import com.example.myapplication.ui.GlassCard
+import com.example.myapplication.ui.glassFieldColors
+import com.example.myapplication.ui.theme.Blue300
+import com.example.myapplication.ui.theme.Blue600
 import com.example.myapplication.ui.theme.MyApplicationTheme
+import com.example.myapplication.ui.theme.Red300
+import com.example.myapplication.ui.theme.Success
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -53,7 +57,11 @@ private const val API_BASE_URL = "https://dev-server.tail223158.ts.net/huellitas
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        // La UI siempre es oscura: iconos claros en las barras aunque el sistema esté en modo claro
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
+            navigationBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT)
+        )
         setContent {
             MyApplicationTheme {
                 PhoneScreen()
@@ -118,19 +126,12 @@ private suspend fun loginUser(email: String, password: String): Int? = withConte
 
 @Composable
 fun PhoneScreen() {
-    val gradient = Brush.verticalGradient(
-        colors = listOf(
-            MaterialTheme.colorScheme.primary.copy(alpha = 0.22f),
-            MaterialTheme.colorScheme.background
-        )
-    )
-
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
     var roleId by remember { mutableStateOf<Int?>(null) }
     var feedbackText by remember { mutableStateOf("") }
-    var feedbackColor by remember { mutableStateOf(Color(0xFF2E7D32)) }
+    var feedbackColor by remember { mutableStateOf(Success) }
     val scope = rememberCoroutineScope()
 
     if (roleId != null) {
@@ -138,11 +139,7 @@ fun PhoneScreen() {
         return
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(gradient)
-    ) {
+    GlassBackground {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -152,127 +149,98 @@ fun PhoneScreen() {
         ) {
             Spacer(modifier = Modifier.height(8.dp))
 
-            Surface(
-                tonalElevation = 2.dp,
-                shape = RoundedCornerShape(28.dp),
-                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(20.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    Text(
-                        text = "Huellitas",
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                    Text(
-                        text = "Veterinary",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        text = "Cuidamos a tus mascotas con atención cercana y rápida.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+            GlassCard(Modifier.fillMaxWidth(), shape = RoundedCornerShape(28.dp)) {
+                Text(
+                    text = "Huellitas",
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = Blue300
+                )
+                Text(
+                    text = "Veterinary",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = "Cuidamos a tus mascotas con atención cercana y rápida.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
 
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface
+            GlassCard(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Text(
+                    text = "Iniciar sesión",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
                 )
-            ) {
-                Column(
+
+                OutlinedTextField(
+                    value = email,
+                    onValueChange = { email = it },
+                    label = { Text("Correo") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = glassFieldColors()
+                )
+
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = { password = it },
+                    label = { Text("Contraseña") },
+                    singleLine = true,
+                    visualTransformation = PasswordVisualTransformation(),
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = glassFieldColors()
+                )
+
+                if (feedbackText.isNotEmpty()) {
+                    Text(
+                        text = feedbackText,
+                        color = feedbackColor,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium,
+                        // TalkBack anuncia el error sin tener que buscarlo
+                        modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }
+                    )
+                }
+
+                Button(
+                    enabled = !isLoading,
+                    onClick = {
+                        if (email.isBlank() || password.isBlank()) {
+                            feedbackText = "Completa correo y contraseña"
+                            feedbackColor = Red300
+                            return@Button
+                        }
+
+                        scope.launch {
+                            isLoading = true
+                            feedbackText = ""
+                            val loggedRoleId = loginUser(email, password)
+                            isLoading = false
+                            if (loggedRoleId != null) {
+                                roleId = loggedRoleId
+                                feedbackText = ""
+                            } else {
+                                feedbackText = "Credenciales incorrectas"
+                                feedbackColor = Red300
+                            }
+                        }
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(20.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                        .height(52.dp)
                 ) {
-                    Text(
-                        text = "Iniciar sesión",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Text(if (isLoading) "Ingresando..." else "Entrar", fontSize = 16.sp)
+                }
 
-                    OutlinedTextField(
-                        value = email,
-                        onValueChange = { email = it },
-                        label = { Text("Correo") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = TextFieldDefaults.colors(
-                            focusedIndicatorColor = MaterialTheme.colorScheme.primary,
-                            unfocusedIndicatorColor = MaterialTheme.colorScheme.outline
-                        )
-                    )
-
-                    OutlinedTextField(
-                        value = password,
-                        onValueChange = { password = it },
-                        label = { Text("Contraseña") },
-                        singleLine = true,
-                        visualTransformation = PasswordVisualTransformation(),
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = TextFieldDefaults.colors(
-                            focusedIndicatorColor = MaterialTheme.colorScheme.primary,
-                            unfocusedIndicatorColor = MaterialTheme.colorScheme.outline
-                        )
-                    )
-
-                    if (feedbackText.isNotEmpty()) {
-                        Text(
-                            text = feedbackText,
-                            color = feedbackColor,
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
-
-                    Button(
-                        enabled = !isLoading,
-                        onClick = {
-                            if (email.isBlank() || password.isBlank()) {
-                                feedbackText = "Completa correo y contraseña"
-                                feedbackColor = Color(0xFFB00020)
-                                return@Button
-                            }
-
-                            scope.launch {
-                                isLoading = true
-                                feedbackText = ""
-                                val loggedRoleId = loginUser(email, password)
-                                isLoading = false
-                                if (loggedRoleId != null) {
-                                    roleId = loggedRoleId
-                                    feedbackText = ""
-                                } else {
-                                    "Credenciales incorrectas"
-                                    feedbackText = "Credenciales incorrectas"
-                                    feedbackColor = Color(0xFFB00020)
-                                }
-                            }
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(52.dp)
-                    ) {
-                        Text(if (isLoading) "Ingresando..." else "Entrar", fontSize = 16.sp)
-                    }
-
-                    TextButton(
-                        modifier = Modifier.align(Alignment.CenterHorizontally),
-                        onClick = { }
-                    ) {
-                        Text("Crear cuenta")
-                    }
+                TextButton(
+                    modifier = Modifier.align(Alignment.CenterHorizontally),
+                    colors = ButtonDefaults.textButtonColors(contentColor = Blue300),
+                    onClick = { }
+                ) {
+                    Text("Crear cuenta")
                 }
             }
 
@@ -284,37 +252,25 @@ fun PhoneScreen() {
                 infoPill("Historial", "12 pets")
             }
 
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.9f)
-                )
+            GlassCard(
+                Modifier.fillMaxWidth(),
+                tint = Blue600.copy(alpha = 0.22f),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(20.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Text(
-                        text = "Hoy",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                    Text(
-                        text = "Consulta de Luna",
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                    Text(
-                        text = "15:30 • Revisón general • Dr. Mejía",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                }
+                Text(
+                    text = "Hoy",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Text(
+                    text = "Consulta de Luna",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "15:30 • Revisión general • Dr. Mejía",
+                    style = MaterialTheme.typography.bodyLarge
+                )
             }
         }
     }
@@ -322,7 +278,7 @@ fun PhoneScreen() {
 
 @Composable
 private fun RolePanel(roleId: Int, onLogout: () -> Unit) {
-    val (title, subtitle, actions) = when (roleId) {
+    val panel: Triple<String, String, List<String>> = when (roleId) {
         1 -> Triple(
             "Panel administrativo",
             "Gestiona usuarios, mascotas, citas y la operación de Huellitas.",
@@ -344,68 +300,65 @@ private fun RolePanel(roleId: Int, onLogout: () -> Unit) {
             emptyList()
         )
     }
+    val (title, subtitle, actions) = panel
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        Text(
-            text = "Huellitas",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary
-        )
-        Text(text = title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-        Text(text = subtitle, style = MaterialTheme.typography.bodyLarge)
+    GlassBackground {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Text(
+                text = "Huellitas",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                color = Blue300
+            )
+            Text(text = title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
 
-        actions.forEach { action ->
-            Button(
-                onClick = { },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp)
-            ) {
-                Text(action)
+            actions.forEach { action ->
+                GlassCard(Modifier.fillMaxWidth(), onClick = { }) {
+                    Text(action, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                }
             }
-        }
 
-        Spacer(modifier = Modifier.weight(1f))
-        TextButton(onClick = onLogout, modifier = Modifier.align(Alignment.CenterHorizontally)) {
-            Text("Cerrar sesión")
+            Spacer(modifier = Modifier.weight(1f))
+            TextButton(
+                onClick = onLogout,
+                colors = ButtonDefaults.textButtonColors(contentColor = Red300),
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            ) {
+                Text("Cerrar sesión")
+            }
         }
     }
 }
 
 @Composable
 private fun infoPill(title: String, subtitle: String) {
-    val pillColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.88f)
-
-    Card(
+    GlassCard(
         modifier = Modifier.fillMaxWidth(0.48f),
         shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = pillColor)
+        padding = 16.dp,
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 16.dp, horizontal = 14.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold
-            )
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold
+        )
+        Text(
+            text = subtitle,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
 
