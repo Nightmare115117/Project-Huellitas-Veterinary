@@ -15,6 +15,7 @@ import com.example.Proyect_DevOps.users.repositories.RolRepository;
 import com.example.Proyect_DevOps.users.repositories.UsuarioRepository;
 import com.example.Proyect_DevOps.utilities.AESUtil;
 import com.example.Proyect_DevOps.utilities.HMACUtil;
+import com.example.Proyect_DevOps.utilities.JWTUtil;
 
 @Service
 public class UsuarioService extends GenericServiceImpl<UsuarioModel, Integer, UsuarioRepository> {
@@ -96,13 +97,17 @@ public class UsuarioService extends GenericServiceImpl<UsuarioModel, Integer, Us
     ** @param contrasena segundo dato del usuario
     ** @return true si las credenciales son correctas o return false si no lo son
     */
-    public boolean validacionDeLogin(String correo, String contrasena){
+    public UsuarioModel validacionDeLogin(String correo, String contrasena){
         Optional<UsuarioModel> usuarioOpt = repository.findByCorreoHMAC(HMACUtil.GenerarHuella(correo));
         if (usuarioOpt.isPresent()){
             UsuarioModel usuario = usuarioOpt.get();
-            return passwordEncoder.matches(contrasena, usuario.getContraseña());
+            if (passwordEncoder.matches(contrasena, usuario.getContraseña())) {
+                return usuario;
+            } else {
+                throw new IllegalArgumentException("Correo o Contraseña Incorrectas");
+            }
         } else {
-            return false;
+            throw new IllegalArgumentException("No se pudo obtener el nombre del usuario");
         }
     }
 
