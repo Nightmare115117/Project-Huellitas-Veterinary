@@ -39,9 +39,6 @@ public class CitaService extends GenericServiceImpl<CitaModel, Integer, CitaRepo
     }
 
     @Autowired
-    private CitaRepository citaRepository;
-
-    @Autowired
     private UsuarioRepository usuarioRepository;
 
     @Autowired
@@ -51,7 +48,7 @@ public class CitaService extends GenericServiceImpl<CitaModel, Integer, CitaRepo
         Optional<UsuarioModel> usuarioOpt = usuarioRepository.findByCorreoHMAC(HMACUtil.GenerarHuella(correo));
         if (usuarioOpt.isPresent()) {
             UsuarioModel usuario = usuarioOpt.get();
-            return citaRepository.countByUsuarioMascotaAndEstadoCita(usuario, 1);
+            return repository.countByUsuarioMascotaAndEstadoCita(usuario, 1);
         } else {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado");
         }
@@ -62,7 +59,7 @@ public class CitaService extends GenericServiceImpl<CitaModel, Integer, CitaRepo
         if (usuarioOpt.isPresent()) {
             UsuarioModel usuario = usuarioOpt.get();
             List<CitaDTO> listaDTO = new ArrayList<>();
-            for (CitaModel elemento : citaRepository.findByUsuarioMascota(usuario)) {
+            for (CitaModel elemento : repository.findByUsuarioMascota(usuario)) {
                 listaDTO.add(convertirADTO(elemento));
             }
             return listaDTO;
@@ -80,7 +77,7 @@ public class CitaService extends GenericServiceImpl<CitaModel, Integer, CitaRepo
             Optional<MascotaModel> mascotaOpt = mascotaRepository.findById(idMascota);
             if (mascotaOpt.isPresent()) {
                 MascotaModel mascota = mascotaOpt.get();
-                for (CitaModel elemento : citaRepository.findByUsuarioMascotaAndMascotaModel(usuario, mascota)) {
+                for (CitaModel elemento : repository.findByUsuarioMascotaAndMascotaModel(usuario, mascota)) {
                     listaDTO.add(convertirADTO(elemento));
                 }
                 return listaDTO;
@@ -100,7 +97,7 @@ public class CitaService extends GenericServiceImpl<CitaModel, Integer, CitaRepo
             if (mascotaOpt.isPresent()) {
                 MascotaModel mascota = mascotaOpt.get();
                 CitaModel cita = new CitaModel(mascota, usuario, citaDTO.fecha(), citaDTO.entradaAgendada(), citaDTO.estadoCita());
-                citaRepository.save(cita);
+                repository.save(cita);
                 return convertirADTO(cita);
             } else {
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Mascota no encontrada");
@@ -111,10 +108,10 @@ public class CitaService extends GenericServiceImpl<CitaModel, Integer, CitaRepo
     }
 
     public boolean cancelarCita (int idCita) {
-        CitaModel cita = citaRepository.findById(idCita).orElseThrow(()-> new RuntimeException("El id de la cita no fue encontrado: " + idCita));
+        CitaModel cita = repository.findById(idCita).orElseThrow(()-> new RuntimeException("El id de la cita no fue encontrado: " + idCita));
         try {
             cita.setEstadoCita(3);
-            citaRepository.save(cita);
+            repository.save(cita);
             return true;
         } catch (Exception  e) {
             return false;

@@ -15,7 +15,6 @@ import com.example.Proyect_DevOps.users.repositories.RolRepository;
 import com.example.Proyect_DevOps.users.repositories.UsuarioRepository;
 import com.example.Proyect_DevOps.utilities.AESUtil;
 import com.example.Proyect_DevOps.utilities.HMACUtil;
-import com.example.Proyect_DevOps.utilities.JWTUtil;
 
 @Service
 public class UsuarioService extends GenericServiceImpl<UsuarioModel, Integer, UsuarioRepository> {
@@ -28,7 +27,16 @@ public class UsuarioService extends GenericServiceImpl<UsuarioModel, Integer, Us
 
     @Override
     public List<UsuarioModel> findAll() {
-        return mostrarUsuarios();
+        List<UsuarioModel> usuarios = new ArrayList<>();
+        for (UsuarioModel entidad : repository.findAll()) {
+            try {
+                entidad.setCorreo(AESUtil.desencriptar(entidad.getCorreo()));
+            } catch (Exception e) {
+                // ignore
+            }
+            usuarios.add(entidad);
+        }
+        return usuarios;
     }
 
     @Override
@@ -45,7 +53,24 @@ public class UsuarioService extends GenericServiceImpl<UsuarioModel, Integer, Us
 
     @Override
     public UsuarioModel save(UsuarioModel entity) {
-        return guardaUsuario(entity);
+        if (repository.existsByCorreoHMAC(HMACUtil.GenerarHuella(entity.getCorreo()))) {
+            throw new RuntimeException("El correo que se registro ya existe");
+        }
+        if (entity.getRol() == null || entity.getRol().getIdRol() <= 0) {
+            throw new RuntimeException("El rol es obligatorio");
+        }
+        Optional<RolModel> rolOpt = rolRepository.findById(entity.getRol().getIdRol());
+        if (rolOpt.isPresent()) {
+            RolModel rol = rolOpt.get();
+            entity.setRol(rol);
+        } else {
+            throw new RuntimeException("El rol que ingreso no se encontro en la base de datos");
+        }
+
+        entity.setCorreoHMAC(HMACUtil.GenerarHuella(entity.getCorreo()));
+        entity.setCorreo(AESUtil.encriptar(entity.getCorreo()));
+        entity.setContraseña(passwordEncoder.encode(entity.getContraseña()));
+        return repository.save(entity);
     }
 
     @Override
@@ -128,40 +153,6 @@ public class UsuarioService extends GenericServiceImpl<UsuarioModel, Integer, Us
         }
     }
 
-    public List<UsuarioModel> mostrarUsuarios(){
-        List<UsuarioModel> usuarios = new ArrayList<>();
-        for (UsuarioModel entidad : repository.findAll()) {
-            try {
-                entidad.setCorreo(AESUtil.desencriptar(entidad.getCorreo()));
-            } catch (Exception e) {
-                // ignore
-            }
-            usuarios.add(entidad);
-        }
-        return usuarios;
-    }
-    
-    public UsuarioModel guardaUsuario(UsuarioModel usuario){
-        if (repository.existsByCorreoHMAC(HMACUtil.GenerarHuella(usuario.getCorreo()))){
-            throw new RuntimeException("El correo que se registro ya existe");
-        } 
-        if (usuario.getRol() == null || usuario.getRol().getIdRol() <= 0){
-            throw new RuntimeException("El rol es obligatorio");
-        }
-        Optional<RolModel> rolOpt = rolRepository.findById(usuario.getRol().getIdRol());
-        if (rolOpt.isPresent()) {
-            RolModel rol = rolOpt.get();
-            usuario.setRol(rol);
-        } else {
-            throw new RuntimeException("El rol que ingreso no se encontro en la base de datos");
-        }
-        
-        usuario.setCorreoHMAC(HMACUtil.GenerarHuella(usuario.getCorreo()));
-        usuario.setCorreo(AESUtil.encriptar(usuario.getCorreo()));
-        usuario.setContraseña(passwordEncoder.encode(usuario.getContraseña()));
-        return repository.save(usuario);
-    }
-
     /*
         Extrae el nombre del Usuario que ingreso su correo dentro del frontend
         si no lo encuentra retorna un "User not found" y si lo encuentra 
@@ -177,20 +168,5 @@ public class UsuarioService extends GenericServiceImpl<UsuarioModel, Integer, Us
         } else {
             return "User not found";
         }
-    }
-
-    public UsuarioModel fingById(int Id) {
-        Optional<UsuarioModel> entity = repository.findById(Id);
-        UsuarioModel entidad = entity.orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-        try {
-            entidad.setCorreo(AESUtil.desencriptar(entidad.getCorreo()));
-        } catch (Exception e) {
-            // ignore
-        }
-        return entidad;
-    }
-
-    public void removerUsuario(int id) {
-        repository.deleteById(id);
     }
 }

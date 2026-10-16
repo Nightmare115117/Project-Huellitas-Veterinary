@@ -3,7 +3,7 @@
 
 
 
-curl -X POST http://192.168.49.2:32179/api/usuario/guardar \
+curl -X POST http://192.168.49.2:32179/api/usuario \
          -H "Content-Type: application/json" \
          -d '{
        "correo": "hola1@gmail.com",
