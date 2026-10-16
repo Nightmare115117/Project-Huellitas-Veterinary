@@ -84,3 +84,28 @@ export function isStaff(user: AdminUser): boolean {
   const role = user.role.toLowerCase()
   return ['veter', 'asist', 'admin', 'gestor'].some((fragment) => role.includes(fragment))
 }
+
+export interface AdminBitacora {
+  idBitacora: number
+  fechaHora: string
+  usuario: string
+  rol?: string
+  accion: string
+  modulo?: string
+  detalle?: string
+  ip?: string
+}
+
+export function toBitacora(r: UnknownRecord): AdminBitacora {
+  return {
+    idBitacora: typeof r.idBitacora === 'number' ? r.idBitacora : Number(r.idBitacora ?? 0),
+    fechaHora: firstText(r.fechaHora, r.fecha, r.createdAt) ?? '',
+    usuario: firstText(r.usuario, r.correo, r.user, r.username) ?? 'Anónimo',
+    rol: firstText(r.rol, r.role) ?? '-',
+    accion: firstText(r.accion, r.action, r.evento) ?? 'ACCIÓN',
+    modulo: firstText(r.modulo, r.module, r.seccion) ?? '-',
+    detalle: firstText(r.detalle, r.descripcion, r.detail) ?? '-',
+    ip: firstText(r.ip, r.direccionIp) ?? '-',
+  }
+}
+

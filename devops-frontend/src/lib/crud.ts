@@ -145,6 +145,19 @@ export const crudTables: CrudTable[] = [
     label: 'Calles',
     campos: [campo('nombre'), campo('colonia', 'ref', '/colonia')],
   },
+  {
+    ruta: '/bitacora',
+    label: 'Bitácora',
+    campos: [
+      campo('fechaHora'),
+      campo('usuario'),
+      campo('rol'),
+      campo('accion'),
+      campo('modulo'),
+      campo('detalle'),
+      campo('ip'),
+    ],
+  },
 ]
 
 /**

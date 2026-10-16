@@ -5,6 +5,8 @@ import {
   LayoutDashboard,
   PawPrint,
   Pill,
+  RotateCw,
+  ScrollText,
   Stethoscope,
   Users,
   type LucideIcon,
@@ -23,21 +25,23 @@ import { useSession } from '../hooks/useSession'
 import {
   isStaff,
   toAppointment,
+  toBitacora,
   toPet,
   toTreatment,
   toUser,
   type AdminAppointment,
+  type AdminBitacora,
   type AdminPet,
   type AdminTreatment,
   type AdminUser,
   type StaffMember,
 } from '../lib/adminMappers'
 import { apiGetOr } from '../lib/api'
-import { formatDate, formatTime } from '../lib/format'
+import { formatDate, formatDateTime, formatTime } from '../lib/format'
 import { extractArray } from '../lib/normalize'
 import type { Perfil } from '../types/api'
 
-type Section = 'inicio' | 'usuarios' | 'mascotas' | 'citas' | 'tratamientos' | 'personal' | 'tablas'
+type Section = 'inicio' | 'usuarios' | 'mascotas' | 'citas' | 'tratamientos' | 'personal' | 'bitacora' | 'tablas'
 
 const navItems: (NavItem & { id: Section })[] = [
   { id: 'inicio', label: 'Inicio', icon: LayoutDashboard },
@@ -46,6 +50,7 @@ const navItems: (NavItem & { id: Section })[] = [
   { id: 'citas', label: 'Citas', icon: CalendarDays },
   { id: 'tratamientos', label: 'Tratamientos', icon: Pill },
   { id: 'personal', label: 'Personal', icon: Stethoscope },
+  { id: 'bitacora', label: 'Bitácora', icon: ScrollText },
   { id: 'tablas', label: 'Tablas', icon: Database },
 ]
 
@@ -70,6 +75,7 @@ interface Dashboard {
   appointments: AdminAppointment[]
   treatments: AdminTreatment[]
   staff: StaffMember[]
+  bitacoras: AdminBitacora[]
   recentActivity: RecentActivity[]
   summaryCards: SummaryCard[]
 }
@@ -80,11 +86,23 @@ const emptyDashboard: Dashboard = {
   appointments: [],
   treatments: [],
   staff: [],
+  bitacoras: [],
   recentActivity: [],
   summaryCards: [],
 }
 
 const statusCell = <T extends { status: string }>(row: T) => <StatusBadge label={row.status} />
+
+const bitacoraColumns: Column<AdminBitacora>[] = [
+  { header: 'ID', cell: (b) => `#${b.idBitacora}` },
+  { header: 'Fecha y Hora', cell: (b) => formatDateTime(b.fechaHora) },
+  { header: 'Usuario', cell: (b) => b.usuario },
+  { header: 'Rol', cell: (b) => b.rol || '-' },
+  { header: 'Acción', cell: (b) => <StatusBadge label={b.accion} /> },
+  { header: 'Módulo', cell: (b) => b.modulo || '-' },
+  { header: 'Detalle', cell: (b) => b.detalle || '-' },
+  { header: 'IP', cell: (b) => b.ip || '-' },
+]
 
 const userColumns: Column<AdminUser>[] = [
   { header: 'Nombre', cell: (u) => u.name },
@@ -137,6 +155,19 @@ export default function MenuAdministrador() {
   const [adminName, setAdminName] = useState('Administrador')
   const [loading, setLoading] = useState(true)
   const [dashboard, setDashboard] = useState<Dashboard>(emptyDashboard)
+  const [bitacoraFiltro, setBitacoraFiltro] = useState('')
+  const [recargandoBitacora, setRecargandoBitacora] = useState(false)
+
+  const recargarBitacora = async () => {
+    setRecargandoBitacora(true)
+    try {
+      const raw = await apiGetOr<unknown>('/bitacora', [])
+      const logs = extractArray(raw, 'bitacora').map(toBitacora)
+      setDashboard((prev) => ({ ...prev, bitacoras: logs }))
+    } finally {
+      setRecargandoBitacora(false)
+    }
+  }
 
   useEffect(() => {
     if (!correo) return
@@ -144,12 +175,13 @@ export default function MenuAdministrador() {
 
     const load = async () => {
       try {
-        const [perfil, usuariosRaw, mascotasRaw, citasRaw, tratamientosRaw] = await Promise.all([
+        const [perfil, usuariosRaw, mascotasRaw, citasRaw, tratamientosRaw, bitacorasRaw] = await Promise.all([
           apiGetOr<Perfil | null>(`/usuario/Nombre/${correo}`, null),
           apiGetOr<unknown>('/usuario', []),
           apiGetOr<unknown>('/mascota', []),
           apiGetOr<unknown>('/cita', []),
           apiGetOr<unknown>('/tratamiento', []),
+          apiGetOr<unknown>('/bitacora', []),
         ])
         if (!isMounted) return
 
@@ -157,6 +189,7 @@ export default function MenuAdministrador() {
         const pets = extractArray(mascotasRaw, 'mascotas').map(toPet)
         const appointments = extractArray(citasRaw, 'citas').map(toAppointment)
         const treatments = extractArray(tratamientosRaw, 'tratamientos').map(toTreatment)
+        const bitacoras = extractArray(bitacorasRaw, 'bitacora').map(toBitacora)
 
         const pendingAppointments = appointments.filter(
           (a) => a.status === 'Pendiente' || a.status === 'Programada',
@@ -170,6 +203,7 @@ export default function MenuAdministrador() {
           appointments,
           treatments,
           staff: users.filter(isStaff),
+          bitacoras,
           recentActivity: appointments.slice(0, 3).map((a) => ({
             user: a.owner,
             action: `Solicitó una cita para ${a.pet}`,
@@ -196,6 +230,19 @@ export default function MenuAdministrador() {
       isMounted = false
     }
   }, [correo])
+
+  const bitacorasFiltradas = dashboard.bitacoras.filter((b) => {
+    if (!bitacoraFiltro.trim()) return true
+    const q = bitacoraFiltro.toLowerCase()
+    return (
+      b.usuario?.toLowerCase().includes(q) ||
+      b.accion?.toLowerCase().includes(q) ||
+      b.modulo?.toLowerCase().includes(q) ||
+      b.detalle?.toLowerCase().includes(q) ||
+      b.rol?.toLowerCase().includes(q) ||
+      b.ip?.toLowerCase().includes(q)
+    )
+  })
 
   return (
     <AppShell
@@ -300,6 +347,44 @@ export default function MenuAdministrador() {
                   rows={dashboard.staff}
                   getRowKey={(m) => `${m.name}-${m.role}`}
                   emptyMessage="No hay personal disponible."
+                />
+              </Panel>
+            </>
+          )}
+
+          {active === 'bitacora' && (
+            <>
+              <PageHeader
+                title="Bitácora Administrativa"
+                subtitle="Registro de auditoría y eventos del sistema (Exclusivo Administrador)"
+              />
+              <Panel title="Eventos y Accesos Registrados">
+                <div className="crud-bar">
+                  <div className="field" style={{ flex: '1', minWidth: '240px', maxWidth: '440px', marginBottom: 0 }}>
+                    <input
+                      type="text"
+                      placeholder="Filtrar por usuario, acción, módulo o IP..."
+                      value={bitacoraFiltro}
+                      onChange={(e) => setBitacoraFiltro(e.target.value)}
+                      className="control"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => void recargarBitacora()}
+                    disabled={recargandoBitacora}
+                    className="btn btn--secondary"
+                  >
+                    <RotateCw size={16} className={recargandoBitacora ? 'spin' : ''} />
+                    Actualizar bitácora
+                  </button>
+                </div>
+                <DataTable
+                  caption="Bitácora de auditoría"
+                  columns={bitacoraColumns}
+                  rows={bitacorasFiltradas}
+                  getRowKey={(b, i) => `${b.idBitacora}-${b.fechaHora}-${i}`}
+                  emptyMessage="No se encontraron registros en la bitácora."
                 />
               </Panel>
             </>
