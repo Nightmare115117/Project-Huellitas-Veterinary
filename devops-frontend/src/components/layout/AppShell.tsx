@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { LogOut, Menu, X, type LucideIcon } from 'lucide-react'
+import { getCorreo } from '../../lib/session'
 import Brand from './Brand'
 
 export interface NavItem {
@@ -36,6 +37,7 @@ export default function AppShell({
     return () => document.removeEventListener('keydown', onKey)
   }, [menuOpen])
 
+  const correo = getCorreo()
   const initial = userName.trim().charAt(0).toUpperCase() || '?'
 
   return (
@@ -77,8 +79,8 @@ export default function AppShell({
             {initial}
           </span>
           <div className="user-card__text">
-            <strong>{userName}</strong>
-            <span>{roleLabel}</span>
+            <strong title={userName}>{userName}</strong>
+            <span title={correo}>{correo}</span>
           </div>
         </div>
 
