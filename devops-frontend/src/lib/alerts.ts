@@ -1,6 +1,4 @@
 import Swal from 'sweetalert2'
-import { isRecord } from './normalize'
-import type { UnknownRecord } from '../types/api'
 
 /** Swal con el tema de la app (estilos en styles/components.css) */
 const themed = Swal.mixin({
@@ -72,32 +70,6 @@ export const alerts = {
       reverseButtons: true,
     })
     return result.isConfirmed
-  },
-
-  /** Editor JSON de un registro. Devuelve el objeto, o undefined si se cancela. */
-  async editJson(title: string, initial: string): Promise<UnknownRecord | undefined> {
-    const result = await themed.fire({
-      title,
-      input: 'textarea',
-      inputValue: initial,
-      inputAttributes: { spellcheck: 'false', 'aria-label': 'Registro en formato JSON' },
-      width: 'min(92vw, 640px)',
-      showCancelButton: true,
-      confirmButtonText: 'Guardar',
-      cancelButtonText: 'Cancelar',
-      reverseButtons: true,
-      preConfirm: (text: string) => {
-        try {
-          const parsed: unknown = JSON.parse(text)
-          if (isRecord(parsed)) return parsed
-          themed.showValidationMessage('Debe ser un objeto JSON { … }')
-        } catch {
-          themed.showValidationMessage('JSON no válido')
-        }
-        return false
-      },
-    })
-    return result.isConfirmed ? (result.value as UnknownRecord) : undefined
   },
 
   loggedOut: () =>
