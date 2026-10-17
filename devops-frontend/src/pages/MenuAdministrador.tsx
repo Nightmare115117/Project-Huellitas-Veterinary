@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import AppShell, { type NavItem } from '../components/layout/AppShell'
 import CrudSection from '../components/ui/CrudSection'
+import Pagination from '../components/ui/Pagination'
 import DataTable, { type Column } from '../components/ui/DataTable'
 import LoadingState from '../components/ui/LoadingState'
 import PageHeader from '../components/ui/PageHeader'
@@ -37,7 +38,7 @@ import {
   type StaffMember,
 } from '../lib/adminMappers'
 import { apiGetOr } from '../lib/api'
-import { formatDate, formatDateTime, formatTime } from '../lib/format'
+import { dateKey, formatDate, formatDateTime, formatTime } from '../lib/format'
 import { extractArray } from '../lib/normalize'
 import type { Perfil } from '../types/api'
 
@@ -92,6 +93,8 @@ const emptyDashboard: Dashboard = {
 }
 
 const statusCell = <T extends { status: string }>(row: T) => <StatusBadge label={row.status} />
+
+const BITACORA_PAGE_SIZE = 50
 
 const bitacoraColumns: Column<AdminBitacora>[] = [
   { header: 'ID', cell: (b) => `#${b.idBitacora}` },
@@ -156,6 +159,8 @@ export default function MenuAdministrador() {
   const [loading, setLoading] = useState(true)
   const [dashboard, setDashboard] = useState<Dashboard>(emptyDashboard)
   const [bitacoraFiltro, setBitacoraFiltro] = useState('')
+  const [bitacoraFecha, setBitacoraFecha] = useState('')
+  const [bitacoraPagina, setBitacoraPagina] = useState(1)
   const [recargandoBitacora, setRecargandoBitacora] = useState(false)
 
   const recargarBitacora = async () => {
@@ -231,7 +236,11 @@ export default function MenuAdministrador() {
     }
   }, [correo])
 
-  const bitacorasFiltradas = dashboard.bitacoras.filter((b) => {
+  // Más recientes primero; la fecha filtra por día y se combina con el texto
+  const bitacorasFiltradas = [...dashboard.bitacoras]
+    .sort((a, b) => b.fechaHora.localeCompare(a.fechaHora))
+    .filter((b) => {
+    if (bitacoraFecha && dateKey(b.fechaHora) !== bitacoraFecha) return false
     if (!bitacoraFiltro.trim()) return true
     const q = bitacoraFiltro.toLowerCase()
     return (
@@ -243,6 +252,18 @@ export default function MenuAdministrador() {
       b.ip?.toLowerCase().includes(q)
     )
   })
+
+  const bitacoraPaginas = Math.max(1, Math.ceil(bitacorasFiltradas.length / BITACORA_PAGE_SIZE))
+  const paginaActual = Math.min(bitacoraPagina, bitacoraPaginas)
+  const bitacoraVisible = bitacorasFiltradas.slice(
+    (paginaActual - 1) * BITACORA_PAGE_SIZE,
+    paginaActual * BITACORA_PAGE_SIZE,
+  )
+
+  const irAPagina = (page: number) => {
+    setBitacoraPagina(page)
+    window.scrollTo({ top: 0 })
+  }
 
   return (
     <AppShell
@@ -364,16 +385,45 @@ export default function MenuAdministrador() {
                     <input
                       type="text"
                       placeholder="Filtrar por usuario, acción, módulo o IP..."
+                      aria-label="Filtrar por usuario, acción, módulo o IP"
                       value={bitacoraFiltro}
-                      onChange={(e) => setBitacoraFiltro(e.target.value)}
+                      onChange={(e) => {
+                        setBitacoraFiltro(e.target.value)
+                        setBitacoraPagina(1)
+                      }}
                       className="control"
                     />
                   </div>
+                  <div className="field" style={{ marginBottom: 0 }}>
+                    <label htmlFor="bitacora-fecha">Fecha</label>
+                    <input
+                      id="bitacora-fecha"
+                      type="date"
+                      value={bitacoraFecha}
+                      onChange={(e) => {
+                        setBitacoraFecha(e.target.value)
+                        setBitacoraPagina(1)
+                      }}
+                      className="control"
+                    />
+                  </div>
+                  {bitacoraFecha && (
+                    <button
+                      type="button"
+                      className="btn btn--ghost"
+                      onClick={() => {
+                        setBitacoraFecha('')
+                        setBitacoraPagina(1)
+                      }}
+                    >
+                      Quitar fecha
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={() => void recargarBitacora()}
                     disabled={recargandoBitacora}
-                    className="btn btn--secondary"
+                    className="btn btn--ghost"
                   >
                     <RotateCw size={16} className={recargandoBitacora ? 'spin' : ''} />
                     Actualizar bitácora
@@ -382,9 +432,15 @@ export default function MenuAdministrador() {
                 <DataTable
                   caption="Bitácora de auditoría"
                   columns={bitacoraColumns}
-                  rows={bitacorasFiltradas}
+                  rows={bitacoraVisible}
                   getRowKey={(b, i) => `${b.idBitacora}-${b.fechaHora}-${i}`}
                   emptyMessage="No se encontraron registros en la bitácora."
+                />
+                <Pagination
+                  page={paginaActual}
+                  pageSize={BITACORA_PAGE_SIZE}
+                  total={bitacorasFiltradas.length}
+                  onChange={irAPagina}
                 />
               </Panel>
             </>
