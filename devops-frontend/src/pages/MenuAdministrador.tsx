@@ -94,7 +94,7 @@ const emptyDashboard: Dashboard = {
 
 const statusCell = <T extends { status: string }>(row: T) => <StatusBadge label={row.status} />
 
-const BITACORA_PAGE_SIZE = 50
+const BITACORA_PAGE_SIZE = 25
 
 const bitacoraColumns: Column<AdminBitacora>[] = [
   { header: 'ID', cell: (b) => `#${b.idBitacora}` },
@@ -103,7 +103,14 @@ const bitacoraColumns: Column<AdminBitacora>[] = [
   { header: 'Rol', cell: (b) => b.rol || '-' },
   { header: 'Acción', cell: (b) => <StatusBadge label={b.accion} /> },
   { header: 'Módulo', cell: (b) => b.modulo || '-' },
-  { header: 'Detalle', cell: (b) => b.detalle || '-' },
+  {
+    header: 'Detalle',
+    cell: (b) => (
+      <span className="crud-cell" title={b.detalle}>
+        {b.detalle || '-'}
+      </span>
+    ),
+  },
   { header: 'IP', cell: (b) => b.ip || '-' },
 ]
 
@@ -429,7 +436,16 @@ export default function MenuAdministrador() {
                     Actualizar bitácora
                   </button>
                 </div>
+                <Pagination
+                  page={paginaActual}
+                  pageSize={BITACORA_PAGE_SIZE}
+                  total={bitacorasFiltradas.length}
+                  onChange={irAPagina}
+                  label="Paginación superior"
+                  live={false}
+                />
                 <DataTable
+                  compact
                   caption="Bitácora de auditoría"
                   columns={bitacoraColumns}
                   rows={bitacoraVisible}
