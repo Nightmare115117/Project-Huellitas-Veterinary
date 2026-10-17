@@ -33,3 +33,19 @@ export function calcularEdad(fechaNacimiento?: string | null): string {
   }
   return `${years} año${years === 1 ? '' : 's'}`
 }
+
+export function formatDateTime(value?: string | null): string {
+  if (!value) return '--'
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return value
+  return date.toLocaleString('es-MX', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true,
+  })
+}
+

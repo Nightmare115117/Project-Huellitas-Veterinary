@@ -11,6 +11,10 @@ const toneByLabel: Record<string, StatusTone> = {
   Pendiente: 'pending',
   Ocupado: 'pending',
   Cancelada: 'danger',
+  LOGIN_EXITOSO: 'success',
+  LOGIN_FALLIDO: 'danger',
+  CREAR_USUARIO: 'info',
+  ELIMINAR_USUARIO: 'danger',
 }
 
 export function toneFor(label: string): StatusTone {
