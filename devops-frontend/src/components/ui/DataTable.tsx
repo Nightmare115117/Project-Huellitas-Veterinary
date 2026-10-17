@@ -13,6 +13,8 @@ interface DataTableProps<T> {
   rows: T[]
   getRowKey: (row: T, index: number) => string | number
   emptyMessage: string
+  /** Filas más bajas, para tablas largas */
+  compact?: boolean
 }
 
 /** Tabla genérica: T es el tipo de cada fila, así `cell` recibe la fila ya tipada. */
@@ -22,12 +24,13 @@ export default function DataTable<T>({
   rows,
   getRowKey,
   emptyMessage,
+  compact = false,
 }: DataTableProps<T>) {
   if (rows.length === 0) return <EmptyState message={emptyMessage} />
 
   return (
     <div className="table-scroll" role="region" aria-label={caption} tabIndex={0}>
-      <table className="table">
+      <table className={compact ? 'table table--compact' : 'table'}>
         <caption className="sr-only">{caption}</caption>
         <thead>
           <tr>

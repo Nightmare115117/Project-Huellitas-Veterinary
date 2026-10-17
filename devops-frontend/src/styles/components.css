@@ -482,6 +482,18 @@
   color: var(--text-muted);
 }
 
+/* El paginador de arriba va pegado a la barra de filtros */
+.crud-bar + .pagination {
+  margin-top: 0;
+  margin-bottom: var(--space-4);
+}
+
+@media (min-width: 641px) {
+  .table--compact td {
+    padding: var(--space-2) var(--space-4);
+  }
+}
+
 .pagination__buttons {
   display: flex;
   flex-wrap: wrap;
