@@ -39,5 +39,4 @@ devops-proyect/src/main/resources/application.properties
 devops-database
 devops-database/Dockerfile
 
-devops-frontend-glass.zip
-devops-frontend.zip
+*.zip
