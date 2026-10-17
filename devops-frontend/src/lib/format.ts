@@ -49,3 +49,13 @@ export function formatDateTime(value?: string | null): string {
   })
 }
 
+
+/** Día local (yyyy-mm-dd) de una fecha-hora, para compararlo con <input type="date"> */
+export function dateKey(value?: string | null): string {
+  if (!value) return ''
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return value.slice(0, 10)
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${date.getFullYear()}-${month}-${day}`
+}

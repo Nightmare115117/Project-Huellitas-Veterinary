@@ -468,6 +468,27 @@
   }
 }
 
+.spin {
+  animation: spin 0.8s linear infinite;
+}
+
+.pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-top: var(--space-5);
+  color: var(--text-muted);
+}
+
+.pagination__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
 .crud-cell {
   display: block;
   max-width: 28ch;

@@ -40,3 +40,4 @@ devops-database
 devops-database/Dockerfile
 
 *.zip
+*.sh
