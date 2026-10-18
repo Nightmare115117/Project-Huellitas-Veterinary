@@ -44,7 +44,7 @@ public class JWTUtil {
     public String generarToken(String correo, int rol, String rolname) {
 
         java.time.Instant ahora = java.time.Instant.now();
-        java.time.Instant expiracion = ahora.plus(java.time.Duration.ofMinutes(15));
+        java.time.Instant expiracion = ahora.plus(java.time.Duration.ofMinutes(30));
 
         JwtClaimsSet claims = JwtClaimsSet.builder()
         .subject(correo)
