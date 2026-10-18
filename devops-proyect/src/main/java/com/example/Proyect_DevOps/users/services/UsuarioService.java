@@ -163,7 +163,7 @@ public class UsuarioService extends GenericServiceImpl<UsuarioModel, Integer, Us
         Optional<UsuarioModel> usuarioOpt = repository.findByCorreoHMAC(HMACUtil.GenerarHuella(correo));
         if (usuarioOpt.isPresent()){
             UsuarioModel usuario = usuarioOpt.get();
-            if (contrasena.length() <= 16 && passwordEncoder.matches(contrasena, usuario.getContraseña())) {
+            if ((contrasena.length() >= 8 || contrasena.length() <= 16) && passwordEncoder.matches(contrasena, usuario.getContraseña())) {
                 return usuario;
             } else {
                 throw new IllegalArgumentException("Correo o Contraseña Incorrectas");
