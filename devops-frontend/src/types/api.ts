@@ -16,33 +16,36 @@ export interface Perfil {
   name?: string
 }
 
-export interface Especie {
-  nombre?: string
-}
-
-export interface Raza {
-  nombre?: string
-  especie?: Especie
-}
-
+/** MascotaDTO de GET /mascota/{correo} */
 export interface Mascota {
-  idMascota?: number
-  nombre?: string
-  fechaNacimiento?: string
-  raza?: Raza | string
-  especie?: string
-  breed?: string
+  idMascota: number
+  nombre: string
+  fechaNacimiento: string | null
+  status: number
+  raza: { idRaza: number; nombre: string; especie: { nombre: string } | null } | null
 }
 
 /** 1 = Programada, 2 = Confirmada, 3 = Cancelada */
 export type EstadoCita = 1 | 2 | 3
 
+/** CitaDTO de GET /cita/{correo} */
 export interface Cita {
   idCita: number
-  fecha?: string
-  entradaAgendada?: string
-  nombreVeterinario?: string
-  estadoCita?: number
+  nombreVeterinario: string
+  idMascota: number
+  fecha: string | null
+  entradaAgendada: string | null
+  estadoCita: number
+}
+
+/** TratamientoDTO de GET /tratamiento/usuario/{correo}; estatus: 0 = en curso, 1 = completado */
+export interface Tratamiento {
+  idTratamiento: number
+  medicamento: string
+  descripcion: string
+  costo: number
+  estatus: number
+  mascotaNombre: string
 }
 
 /**
