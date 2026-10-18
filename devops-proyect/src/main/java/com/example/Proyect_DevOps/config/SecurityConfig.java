@@ -81,7 +81,6 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.POST, "/usuario/login").permitAll()
                 .requestMatchers("/usuario/Rol").permitAll()
-                .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                 .requestMatchers("/bitacora", "/bitacora/**").hasAnyAuthority("Admin", "Administrador")
                 .requestMatchers("/usuario").hasAnyAuthority("Admin", "Administrador")
                 .anyRequest().authenticated()

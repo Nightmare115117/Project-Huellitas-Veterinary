@@ -79,9 +79,9 @@ public class BitacoraInterceptor implements HandlerInterceptor {
             return;
         }
 
-        // 3. Omitir rutas técnicas, endpoints de error, consultas a la propia bitácora y swagger
+        // 3. Omitir rutas técnicas, endpoints de error y consultas a la propia bitácora
         if (uri.startsWith("/bitacora") || uri.startsWith("/error") || uri.startsWith("/actuator")
-                || uri.contains("favicon") || uri.startsWith("/swagger-ui") || uri.startsWith("/v3/api-docs")) {
+                || uri.contains("favicon")) {
             return;
         }
 

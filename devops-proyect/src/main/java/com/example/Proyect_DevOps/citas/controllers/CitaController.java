@@ -17,9 +17,6 @@ import com.example.Proyect_DevOps.citas.models.CitaModel;
 import com.example.Proyect_DevOps.citas.services.CitaService;
 import com.example.Proyect_DevOps.common.controllers.GenericController;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-
 /**
  * Controlador REST para la gestión de citas veterinarias.
  * Expone endpoints para contar citas activas, listar citas por usuario o por mascota,
@@ -28,7 +25,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
  * @author Equipo DevOps Huellitas
  * @version 1.0
  */
-@Tag(name = "Citas Médicas", description = "Endpoints para agendar, consultar, contar y cancelar citas veterinarias")
 @RestController
 @RequestMapping("/cita")
 public class CitaController extends GenericController<CitaModel, Integer, CitaService> {
@@ -39,7 +35,6 @@ public class CitaController extends GenericController<CitaModel, Integer, CitaSe
      * @param correo Correo electrónico del usuario.
      * @return Cantidad de citas activas agendadas.
      */
-    @Operation(summary = "Contar citas activas por usuario", description = "Retorna el total de citas activas (estado 1) asociadas al correo del cliente.")
     @GetMapping("/usuario/{correo:.+}")
     public long contarCitasPorUsuario(@PathVariable String correo) {
         return service.countByUsuarioCitas(correo);
@@ -51,7 +46,6 @@ public class CitaController extends GenericController<CitaModel, Integer, CitaSe
      * @param correo Correo electrónico del usuario.
      * @return Lista de {@link CitaDTO} pertenecientes al usuario.
      */
-    @Operation(summary = "Listar citas por usuario", description = "Retorna todas las citas agendadas por un cliente a partir de su correo.")
     @GetMapping("/{correo:.+@.+}")
     public List<CitaDTO> conseguirListaDeCitas(@PathVariable String correo) {
         return service.getCitasByUser(correo);
@@ -64,7 +58,6 @@ public class CitaController extends GenericController<CitaModel, Integer, CitaSe
      * @param idMascota Identificador de la mascota.
      * @return Lista de {@link CitaDTO} de la mascota.
      */
-    @Operation(summary = "Listar citas por mascota de usuario", description = "Obtiene el historial de citas de una mascota concreta perteneciente a un cliente.")
     @GetMapping("/{correo:.+@.+}/{idMascota:[0-9]+}")
     public List<CitaDTO> conseguirListaDeCitasPorMascota(@PathVariable String correo, @PathVariable int idMascota){
         return service.getCitasByUserAndPet(correo, idMascota);
@@ -76,7 +69,6 @@ public class CitaController extends GenericController<CitaModel, Integer, CitaSe
      * @param citaDTO Objeto con la información de la cita médica a agendar.
      * @return {@link CitaDTO} con la información de la cita persistida.
      */
-    @Operation(summary = "Agendar nueva cita médica", description = "Crea una nueva cita veterinaria vinculando mascota, cliente, fecha y hora.")
     @PostMapping("/crear")
     public CitaDTO crearCita(@RequestBody CitaDTO citaDTO){
         return service.createCita(citaDTO);
@@ -88,7 +80,6 @@ public class CitaController extends GenericController<CitaModel, Integer, CitaSe
      * @param idCita Identificador único de la cita médica a cancelar.
      * @return {@link ResponseEntity} con código 200 (OK) y {@code true} si se canceló, o 404 (NOT_FOUND) con el error.
      */
-    @Operation(summary = "Cancelar cita médica", description = "Actualiza el estado de la cita médica a cancelada (estado 3).")
     @PutMapping("/cancelar/{idCita:[0-9]+}") 
     public ResponseEntity<?> cancelarCita(@PathVariable int idCita) {
         try {

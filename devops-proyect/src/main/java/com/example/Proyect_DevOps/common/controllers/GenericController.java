@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import com.example.Proyect_DevOps.common.services.GenericService;
-import io.swagger.v3.oas.annotations.Operation;
 
 /**
  * Controlador REST abstracto base que expone los endpoints CRUD genéricos.
@@ -38,7 +37,6 @@ public abstract class GenericController<T, ID, S extends GenericService<T, ID>> 
      *
      * @return {@link ResponseEntity} con código 200 (OK) y la lista de entidades en el cuerpo.
      */
-    @Operation(summary = "Obtener todas las entidades", description = "Retorna la lista completa de registros almacenados en el sistema.")
     @GetMapping
     public ResponseEntity<List<T>> getAll() {
         return ResponseEntity.ok(service.findAll());
@@ -51,7 +49,6 @@ public abstract class GenericController<T, ID, S extends GenericService<T, ID>> 
      * @return {@link ResponseEntity} con código 200 (OK) y la entidad encontrada,
      *         o código 404 (NOT_FOUND) si no existe.
      */
-    @Operation(summary = "Obtener entidad por ID", description = "Recupera los datos de un registro específico a partir de su ID numérico.")
     @GetMapping("/{id:[0-9]+}")
     public ResponseEntity<T> getById(@PathVariable("id") ID id) {
         return service.findById(id)
@@ -65,7 +62,6 @@ public abstract class GenericController<T, ID, S extends GenericService<T, ID>> 
      * @param entity Cuerpo de la petición que contiene los datos de la entidad a crear.
      * @return {@link ResponseEntity} con código 201 (CREATED) y la entidad creada.
      */
-    @Operation(summary = "Crear nueva entidad", description = "Persiste una nueva entidad en la base de datos con los datos suministrados.")
     @PostMapping
     public ResponseEntity<T> create(@RequestBody T entity) {
         T created = service.save(entity);
@@ -80,7 +76,6 @@ public abstract class GenericController<T, ID, S extends GenericService<T, ID>> 
      * @return {@link ResponseEntity} con código 200 (OK) y la entidad modificada,
      *         o código 404 (NOT_FOUND) si no existe.
      */
-    @Operation(summary = "Actualizar entidad existente", description = "Modifica los atributos de un registro identificado por su ID.")
     @PutMapping("/{id:[0-9]+}")
     public ResponseEntity<T> update(@PathVariable("id") ID id, @RequestBody T entity) {
         return service.update(id, entity)
@@ -95,7 +90,6 @@ public abstract class GenericController<T, ID, S extends GenericService<T, ID>> 
      * @return {@link ResponseEntity} con código 204 (NO_CONTENT) si fue eliminada con éxito,
      *         o código 404 (NOT_FOUND) si no fue encontrada.
      */
-    @Operation(summary = "Eliminar entidad por ID", description = "Elimina permanentemente el registro asociado al ID numérico provisto.")
     @DeleteMapping("/{id:[0-9]+}")
     public ResponseEntity<Void> delete(@PathVariable("id") ID id) {
         if (service.deleteById(id)) {

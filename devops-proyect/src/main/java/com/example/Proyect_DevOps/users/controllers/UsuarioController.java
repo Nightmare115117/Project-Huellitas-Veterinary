@@ -21,9 +21,6 @@ import com.example.Proyect_DevOps.users.models.UsuarioModel;
 import com.example.Proyect_DevOps.users.services.UsuarioService;
 import com.example.Proyect_DevOps.utilities.JWTUtil;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-
 /**
  * Controlador REST para la gestión de usuarios y autenticación en el sistema.
  * Proporciona endpoints para inicio de sesión (login con emisión de JWT), consulta de roles
@@ -32,7 +29,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
  * @author Equipo DevOps Huellitas
  * @version 1.0
  */
-@Tag(name = "Usuarios", description = "Endpoints de autenticación, consulta de roles y administración de usuarios")
 @RestController
 @RequestMapping("/usuario")
 public class UsuarioController extends GenericController<UsuarioModel, Integer, UsuarioService> {
@@ -68,7 +64,6 @@ public class UsuarioController extends GenericController<UsuarioModel, Integer, 
      * @return {@link ResponseEntity} con código 200 (OK) y token JWT si es exitoso,
      *         o código 400 / 401 si las credenciales son incorrectas o faltan campos.
      */
-    @Operation(summary = "Inicio de sesión", description = "Valida credenciales y emite un token de acceso JWT firmado.", security = {})
     @PostMapping("/login")
     public ResponseEntity<Map<String, Object>> login(@RequestBody Map<String, String> credenciales, HttpServletRequest request) {
         String correo = credenciales.get("correo");
@@ -129,7 +124,6 @@ public class UsuarioController extends GenericController<UsuarioModel, Integer, 
      * @param correo Correo electrónico del usuario enviado como parámetro de consulta.
      * @return {@link ResponseEntity} con código 200 (OK) y el ID del rol o -1 si no fue encontrado.
      */
-    @Operation(summary = "Consultar rol por correo", description = "Retorna el ID del rol asignado a un usuario por su correo.", security = {})
     @GetMapping("/Rol")
     public ResponseEntity<Integer> getRol(@RequestParam("correo") String correo) {
         Integer idRol = service.buscarIdRol(correo);
@@ -142,7 +136,6 @@ public class UsuarioController extends GenericController<UsuarioModel, Integer, 
      * @param correo Correo del usuario especificado en la ruta.
      * @return {@link ResponseEntity} con código 200 (OK) y mapa con el nombre completo del usuario.
      */
-    @Operation(summary = "Obtener nombre por correo", description = "Recupera el nombre y apellidos completos del usuario mediante su correo.")
     @GetMapping("/Nombre/{correo:.+}")
     public ResponseEntity<Map<String, String>> getNombre(@PathVariable String correo) {
         String nombre = service.extraerNombre(correo);
