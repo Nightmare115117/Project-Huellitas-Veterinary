@@ -12,24 +12,55 @@ import javax.crypto.spec.SecretKeySpec;
 import io.github.cdimascio.dotenv.Dotenv;
 import io.github.cdimascio.dotenv.DotenvException;
 
+/**
+ * Utilidad criptográfica para generar huellas digitales (hashes de autenticación de mensajes)
+ * utilizando el algoritmo HmacSHA256. Permite indexar y buscar información protegida
+ * (como correos electrónicos cifrados) de forma segura y determinista.
+ *
+ * @author Equipo DevOps Huellitas
+ * @version 1.0
+ */
 public class HMACUtil {
 
+    /**
+     * Algoritmo estándar utilizado para el código de autenticación de mensaje con clave (HMAC).
+     */
     private static final String ALGORITHM = "HmacSHA256";
+
+    /**
+     * Clave secreta obtenida desde el entorno.
+     */
     private static final String KEY = obtenerClave();
 
+    /**
+     * Obtiene el valor de la variable HMAC_SECRET desde .env o el entorno del sistema.
+     *
+     * @return Cadena que representa el secreto HMAC.
+     */
     private static String obtenerKey() {
         try {
             Dotenv dotenv = Dotenv.load();
-            return  dotenv.get("HMAC_SECRET");
+            return dotenv.get("HMAC_SECRET");
         } catch (DotenvException e) {
             return System.getenv("HMAC_SECRET");
         }
     }
 
+    /**
+     * Valida de manera temprana que la clave HMAC_SECRET esté configurada correctamente.
+     *
+     * @throws IllegalStateException Si la clave no está presente o no tiene formato hexadecimal de 64 caracteres.
+     */
     public static void validarHMACKey() {
         obtenerClave();
     }
 
+    /**
+     * Valida y devuelve la clave hexadecimal de 64 caracteres configurada para HMAC.
+     *
+     * @return Cadena hexadecimal de 64 caracteres.
+     * @throws IllegalStateException Si la clave es nula o inválida.
+     */
     private static String obtenerClave() {
         String key = obtenerKey();
             
@@ -48,6 +79,14 @@ public class HMACUtil {
         return key;   
     }
 
+    /**
+     * Genera la huella digital criptográfica (hash HMAC-SHA256) del dato proporcionado,
+     * codificada en formato Base64.
+     *
+     * @param dato Cadena de texto a procesar (por ejemplo, el correo electrónico).
+     * @return Huella digital resultante en formato Base64.
+     * @throws RuntimeException Si el algoritmo no está disponible o la clave es inválida.
+     */
     public static String GenerarHuella(String dato) {
         try {
             byte[] keyHex = HexFormat.of().parseHex(KEY);

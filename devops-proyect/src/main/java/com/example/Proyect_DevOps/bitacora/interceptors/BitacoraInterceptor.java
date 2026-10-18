@@ -17,23 +17,49 @@ import com.example.Proyect_DevOps.bitacora.services.BitacoraService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+/**
+ * Interceptor de peticiones HTTP para la auditoría automática del sistema.
+ * Captura las operaciones mutantes (POST, PUT, DELETE, PATCH), extrae el usuario autenticado
+ * desde el contexto de seguridad Spring Security, mapea el módulo y la acción correspondiente,
+ * y delega el registro al servicio {@link BitacoraService}.
+ *
+ * @author Equipo DevOps Huellitas
+ * @version 1.0
+ */
 @Component
 public class BitacoraInterceptor implements HandlerInterceptor {
 
     private static final Logger log = LoggerFactory.getLogger(BitacoraInterceptor.class);
 
     /**
-     * En bitácoras de auditoría se registran por defecto las acciones mutantes (POST, PUT, DELETE, PATCH).
-     * Las consultas de lectura masivas (GET) se omiten para evitar saturar la base de datos durante la navegación normal.
+     * Bandera para habilitar o deshabilitar el registro de peticiones de solo lectura (GET).
+     * Por defecto se omiten para evitar saturar el almacenamiento de auditoría con tráfico rutinario.
      */
     private static final boolean REGISTRAR_CONSULTAS_GET = false;
 
+    /**
+     * Servicio de bitácora inyectado para la persistencia de eventos.
+     */
     private final BitacoraService bitacoraService;
 
+    /**
+     * Constructor con inyección opcional del servicio de bitácora.
+     *
+     * @param bitacoraService Instancia de {@link BitacoraService} o nulo si no está disponible.
+     */
     public BitacoraInterceptor(@Autowired(required = false) BitacoraService bitacoraService) {
         this.bitacoraService = bitacoraService;
     }
 
+    /**
+     * Callback invocado tras la finalización completa de la petición HTTP y renderizado de la vista/respuesta.
+     * Realiza el filtrado de rutas técnicas y guarda el evento de auditoría.
+     *
+     * @param request Petición HTTP recibida.
+     * @param response Respuesta HTTP generada.
+     * @param handler Manejador o controlador ejecutado.
+     * @param ex Posible excepción lanzada durante el procesamiento, o nula si fue exitoso.
+     */
     @Override
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, @Nullable Exception ex) {
         if (bitacoraService == null) {
@@ -53,8 +79,9 @@ public class BitacoraInterceptor implements HandlerInterceptor {
             return;
         }
 
-        // 3. Omitir rutas técnicas, endpoints de error y consultas a la propia bitácora
-        if (uri.startsWith("/bitacora") || uri.startsWith("/error") || uri.startsWith("/actuator") || uri.contains("favicon")) {
+        // 3. Omitir rutas técnicas, endpoints de error, consultas a la propia bitácora y swagger
+        if (uri.startsWith("/bitacora") || uri.startsWith("/error") || uri.startsWith("/actuator")
+                || uri.contains("favicon") || uri.startsWith("/swagger-ui") || uri.startsWith("/v3/api-docs")) {
             return;
         }
 
@@ -125,6 +152,12 @@ public class BitacoraInterceptor implements HandlerInterceptor {
         }
     }
 
+    /**
+     * Resuelve el nombre del módulo del negocio examinando la ruta URI de la petición.
+     *
+     * @param uri Ruta de la solicitud HTTP.
+     * @return Nombre legible del módulo asociado (ej. "Citas", "Mascotas", "Geolocalización").
+     */
     public String resolverModulo(String uri) {
         String cleanUri = uri.toLowerCase();
         if (cleanUri.contains("/cita")) return "Citas";
@@ -152,6 +185,13 @@ public class BitacoraInterceptor implements HandlerInterceptor {
         return "General";
     }
 
+    /**
+     * Resuelve el código descriptivo de la acción realizada con base en el método HTTP y la ruta URI.
+     *
+     * @param method Método HTTP utilizado (GET, POST, PUT, DELETE, etc.).
+     * @param uri Ruta URI de la petición.
+     * @return Código de la acción normalizado (ej. "CREAR_CITA", "ACTUALIZAR_USUARIO").
+     */
     public String resolverAccion(String method, String uri) {
         String upperMethod = method != null ? method.toUpperCase() : "ACCION";
         String lowerUri = uri != null ? uri.toLowerCase() : "";
@@ -180,6 +220,12 @@ public class BitacoraInterceptor implements HandlerInterceptor {
         };
     }
 
+    /**
+     * Deduce el nombre de la entidad principal a partir de los segmentos de la ruta URI.
+     *
+     * @param uri Ruta en minúsculas.
+     * @return Nombre de la entidad en mayúsculas (ej. "CITA", "MASCOTA", "USUARIO").
+     */
     private String extraerEntidad(String uri) {
         if (uri.contains("/cita")) return "CITA";
         if (uri.contains("/mascota")) return "MASCOTA";

@@ -5,6 +5,12 @@ import org.springframework.stereotype.Repository;
 
 import com.example.Proyect_DevOps.sucursales.models.DireccionModel;
 
+/**
+ * Repositorio JPA para la entidad {@link DireccionModel}.
+ *
+ * @author Equipo DevOps Huellitas
+ * @version 1.0
+ */
 @Repository
 public interface DireccionRepository extends JpaRepository<DireccionModel, Integer>{
 

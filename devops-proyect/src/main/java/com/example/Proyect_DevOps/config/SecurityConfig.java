@@ -38,14 +38,35 @@ import com.example.Proyect_DevOps.utilities.JWTTest;
 
 import jakarta.annotation.PostConstruct;
 
+/**
+ * Configuración central de seguridad de Spring Security y OAuth2 Resource Server con JWT.
+ * Administra el cifrado de contraseñas, políticas de sesión sin estado (stateless),
+ * filtros de autenticación y autorización por roles, y la validación de claves criptográficas.
+ *
+ * @author Equipo DevOps Huellitas
+ * @version 1.0
+ */
 @Configuration
 public class SecurityConfig {
 
+    /**
+     * Define el codificador de contraseñas utilizando el algoritmo BCrypt con fuerza 12.
+     *
+     * @return Instancia configurada de {@link PasswordEncoder}.
+     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder(12);
     }
 
+    /**
+     * Configura la cadena de filtros de seguridad HTTP, deshabilitando CSRF, estableciendo
+     * sesiones sin estado, integrando el Resource Server JWT y autorizando las rutas públicas y protegidas.
+     *
+     * @param http Objeto {@link HttpSecurity} para configurar la seguridad a nivel web.
+     * @return La cadena de filtros de seguridad compilada {@link SecurityFilterChain}.
+     * @throws Exception Si ocurre algún error durante la configuración de la seguridad.
+     */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
@@ -60,6 +81,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.POST, "/usuario/login").permitAll()
                 .requestMatchers("/usuario/Rol").permitAll()
+                .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                 .requestMatchers("/bitacora", "/bitacora/**").hasAnyAuthority("Admin", "Administrador")
                 .requestMatchers("/usuario").hasAnyAuthority("Admin", "Administrador")
                 .anyRequest().authenticated()
@@ -68,6 +90,12 @@ public class SecurityConfig {
         return http.build();
     }
 
+    /**
+     * Configura el convertidor de autenticación JWT para mapear la claim "roles"
+     * a autoridades de Spring Security sin prefijo.
+     *
+     * @return El convertidor configurado {@link JwtAuthenticationConverter}.
+     */
     @Bean
     public JwtAuthenticationConverter configurarRol() {
         JwtGrantedAuthoritiesConverter rolesConverter =
@@ -84,11 +112,23 @@ public class SecurityConfig {
         return jwtConverter;
     }
 
+    /**
+     * Validador estándar para tokens JWT.
+     *
+     * @return Instancia de {@link OAuth2TokenValidator} para validar tokens JWT.
+     */
     @Bean
     public OAuth2TokenValidator<Jwt> jwtValidator() {
         return JwtValidators.createDefault();
     }
 
+    /**
+     * Carga y procesa la clave secreta utilizada para la firma de tokens JWT HMAC-SHA256
+     * desde el archivo .env o las variables de entorno del sistema.
+     *
+     * @return {@link SecretKey} para firma y verificación de tokens.
+     * @throws IllegalStateException Si la variable JWT_SECRET no está configurada o no tiene 64 caracteres hexadecimales.
+     */
     @Bean 
     public SecretKey leerKey(){
         String key;
@@ -106,11 +146,24 @@ public class SecurityConfig {
         return new SecretKeySpec(keyHex, "HmacSHA256");
     }
 
+    /**
+     * Bean codificador de tokens JWT mediante Nimbus y la clave secreta configurada.
+     *
+     * @param secretKey Clave secreta simétrica.
+     * @return {@link JwtEncoder} para generar tokens JWT firmados.
+     */
     @Bean
     public JwtEncoder jwtEncoder(SecretKey secretKey) {
         return new NimbusJwtEncoder(new ImmutableSecret<>(secretKey));
     }
 
+    /**
+     * Bean decodificador y verificador de tokens JWT utilizando Nimbus y el algoritmo HS256.
+     *
+     * @param secretKey Clave secreta simétrica para validar la firma.
+     * @param token Validador de tokens de Spring Security.
+     * @return {@link JwtDecoder} configurado para la validación de tokens entrantes.
+     */
     @Bean 
     public JwtDecoder jwtDecoder(SecretKey secretKey, OAuth2TokenValidator<Jwt> token) {
         NimbusJwtDecoder decoder = NimbusJwtDecoder.withSecretKey(secretKey)
@@ -120,16 +173,25 @@ public class SecurityConfig {
         return decoder;
     }
 
+    /**
+     * Método de ciclo de vida que valida la presencia y formato de la clave AES al iniciar la aplicación.
+     */
     @PostConstruct
     public void validarAES() {
         AESUtil.validarAESKey();
     }
 
+    /**
+     * Método de ciclo de vida que valida la presencia y formato de la clave HMAC al iniciar la aplicación.
+     */
     @PostConstruct
     public void validarHMAC() {
         HMACUtil.validarHMACKey();
     }
 
+    /**
+     * Método de ciclo de vida que valida la presencia y formato de la clave JWT al iniciar la aplicación.
+     */
     @PostConstruct
     public void validarJWT() {
         JWTTest.validarJWTKey();
