@@ -5,19 +5,23 @@ import {
   House,
   PawPrint,
   Pill,
+  Plus,
   UserRound,
 } from 'lucide-react'
 import AppShell, { type NavItem } from '../components/layout/AppShell'
 import DataTable, { type Column } from '../components/ui/DataTable'
 import LoadingState from '../components/ui/LoadingState'
 import PageHeader from '../components/ui/PageHeader'
+import RecordDialog from '../components/ui/RecordDialog'
 import Reveal from '../components/ui/Reveal'
 import Panel from '../components/ui/Panel'
 import StatCard from '../components/ui/StatCard'
 import StatusBadge from '../components/ui/StatusBadge'
 import { useLogout } from '../hooks/useLogout'
 import { useSession } from '../hooks/useSession'
-import { apiGet } from '../lib/api'
+import { alerts } from '../lib/alerts'
+import { apiGet, apiSend } from '../lib/api'
+import type { Campo } from '../lib/crud'
 import { calcularEdad, dateKey, formatDate, formatMoney, formatTime } from '../lib/format'
 import { citaStatus, tratamientoStatus } from '../lib/status'
 import type { Cita, Mascota, Perfil, Tratamiento } from '../types/api'
@@ -35,6 +39,12 @@ const navItems: (NavItem & { id: Section })[] = [
 
 const especieDe = (m: Mascota) => m.raza?.especie?.nombre ?? 'Sin especie'
 const razaDe = (m: Mascota) => m.raza?.nombre ?? 'Sin raza'
+
+const camposCita: Campo[] = [
+  { key: 'mascota', label: 'Mascota', tipo: 'ref', ref: '/mascota' },
+  { key: 'fecha', label: 'Fecha', tipo: 'date' },
+  { key: 'hora', label: 'Hora', tipo: 'time' },
+]
 
 const tratamientoStatusCell = (t: Tratamiento) => {
   const { label, tone } = tratamientoStatus(t.estatus)
@@ -56,6 +66,9 @@ export default function MenuDueno() {
   const [citas, setCitas] = useState<Cita[]>([])
   const [tratamientos, setTratamientos] = useState<Tratamiento[]>([])
   const [loading, setLoading] = useState(true)
+  const [nuevaCita, setNuevaCita] = useState(false)
+  const [guardando, setGuardando] = useState(false)
+  const [formError, setFormError] = useState('')
 
   useEffect(() => {
     if (!correo) return
@@ -103,6 +116,36 @@ export default function MenuDueno() {
     citas
       .filter((c) => c.estadoCita !== 3 && c.fecha != null && c.fecha >= hoy)
       .sort((a, b) => `${a.fecha}${a.entradaAgendada}`.localeCompare(`${b.fecha}${b.entradaAgendada}`))[0] ?? null
+  const cerrarNuevaCita = () => {
+    setNuevaCita(false)
+    setFormError('')
+  }
+
+  // POST /cita/crear: el backend la guarda como Programada (1) y el veterinario se asigna después
+  const crearCita = async (v: Record<string, string>) => {
+    if (!v.mascota || !v.fecha || !v.hora) return void setFormError('Completa mascota, fecha y hora.')
+    if (v.fecha < hoy) return void setFormError('La fecha no puede ser anterior a hoy.')
+
+    setGuardando(true)
+    setFormError('')
+    try {
+      await apiSend('POST', '/cita/crear', {
+        correoCliente: correo,
+        idMascota: Number(v.mascota),
+        fecha: v.fecha,
+        entradaAgendada: v.hora,
+        estadoCita: 1,
+      })
+      setCitas(await apiGet<Cita[]>(`/cita/${correo}`))
+      cerrarNuevaCita()
+      void alerts.done('Cita creada')
+    } catch {
+      setFormError('No se pudo crear la cita. Intenta de nuevo.')
+    } finally {
+      setGuardando(false)
+    }
+  }
+
   const tratamientosActivos = tratamientos.filter((t) => t.estatus === 0).length
 
   const mascotaColumns: Column<Mascota>[] = [
@@ -222,7 +265,22 @@ export default function MenuDueno() {
 
           {active === 'citas' && (
             <>
-              <PageHeader title="Citas" subtitle="Tus próximas citas veterinarias" />
+              <PageHeader
+                title="Citas"
+                subtitle="Tus próximas citas veterinarias"
+                action={
+                  <button
+                    type="button"
+                    className="btn btn--primary"
+                    disabled={mascotas.length === 0}
+                    title={mascotas.length === 0 ? 'Necesitas una mascota registrada' : undefined}
+                    onClick={() => setNuevaCita(true)}
+                  >
+                    <Plus size={20} aria-hidden />
+                    Nueva cita
+                  </button>
+                }
+              />
               <Panel>
                 <DataTable
                   caption="Mis citas"
@@ -291,6 +349,19 @@ export default function MenuDueno() {
             </>
           )}
         </Reveal>
+      )}
+      {nuevaCita && (
+        <RecordDialog
+          titulo="Nueva cita"
+          editando={false}
+          campos={camposCita}
+          initial={{ mascota: mascotas.length === 1 ? String(mascotas[0].idMascota) : '', fecha: '', hora: '' }}
+          opciones={{ '/mascota': mascotas.map((m) => ({ value: String(m.idMascota), label: m.nombre })) }}
+          guardando={guardando}
+          error={formError}
+          onSubmit={(v) => void crearCita(v)}
+          onClose={cerrarNuevaCita}
+        />
       )}
     </AppShell>
   )
