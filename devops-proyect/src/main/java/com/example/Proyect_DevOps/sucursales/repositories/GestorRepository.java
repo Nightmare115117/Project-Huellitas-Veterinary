@@ -5,6 +5,12 @@ import org.springframework.stereotype.Repository;
 
 import com.example.Proyect_DevOps.sucursales.models.GestorModel;
 
+/**
+ * Repositorio JPA para la entidad {@link GestorModel}.
+ *
+ * @author Equipo DevOps Huellitas
+ * @version 1.0
+ */
 @Repository
 public interface GestorRepository extends JpaRepository<GestorModel, Integer>{
 

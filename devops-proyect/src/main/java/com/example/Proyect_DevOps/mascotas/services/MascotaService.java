@@ -17,12 +17,28 @@ import com.example.Proyect_DevOps.users.models.UsuarioModel;
 import com.example.Proyect_DevOps.users.repositories.UsuarioRepository;
 import com.example.Proyect_DevOps.utilities.HMACUtil;
 
+/**
+ * Servicio de negocio para la administración y consulta de mascotas.
+ * Gestiona la transformación a DTO, búsqueda de mascotas por usuario mediante HMAC y conteo total de mascotas.
+ *
+ * @author Equipo DevOps Huellitas
+ * @version 1.0
+ */
 @Service
 public class MascotaService extends GenericServiceImpl<MascotaModel, Integer, MascotaRepository> {
 
+    /**
+     * Repositorio de usuarios para resolver la identidad del dueño.
+     */
     @Autowired
     private UsuarioRepository user;
 
+    /**
+     * Transforma una entidad {@link MascotaModel} a su representación desacoplada {@link MascotaDTO}.
+     *
+     * @param mascota Entidad de la mascota.
+     * @return Objeto {@link MascotaDTO}.
+     */
     public MascotaDTO convertirADTO(MascotaModel mascota) {
         return new MascotaDTO(
             mascota.getIdMascota(),
@@ -32,6 +48,12 @@ public class MascotaService extends GenericServiceImpl<MascotaModel, Integer, Ma
             mascota.getRaza());
     }
 
+    /**
+     * Obtiene la lista de todas las mascotas registradas a nombre de un usuario según su correo.
+     *
+     * @param correo Correo electrónico del usuario dueño.
+     * @return Lista de {@link MascotaDTO} asociadas.
+     */
     public List<MascotaDTO> getAllMascotaByUser(String correo){
         Optional<UsuarioModel> usuarioOpt = user.findByCorreoHMAC(HMACUtil.GenerarHuella(correo));
         if (usuarioOpt.isPresent()){
@@ -47,6 +69,13 @@ public class MascotaService extends GenericServiceImpl<MascotaModel, Integer, Ma
         }
     }
 
+    /**
+     * Cuenta el total de mascotas asociadas a un usuario según su correo.
+     *
+     * @param correo Correo electrónico del usuario dueño.
+     * @return Cantidad total de mascotas registradas.
+     * @throws ResponseStatusException Si el usuario no fue encontrado en el sistema (404).
+     */
     public long getCountMascotasByUser (String correo) throws RuntimeException {
         Optional<UsuarioModel> usuarioOpt = user.findByCorreoHMAC(HMACUtil.GenerarHuella(correo));
         if (usuarioOpt.isPresent()){

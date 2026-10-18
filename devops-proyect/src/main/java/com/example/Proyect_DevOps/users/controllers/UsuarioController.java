@@ -21,18 +21,54 @@ import com.example.Proyect_DevOps.users.models.UsuarioModel;
 import com.example.Proyect_DevOps.users.services.UsuarioService;
 import com.example.Proyect_DevOps.utilities.JWTUtil;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+/**
+ * Controlador REST para la gestión de usuarios y autenticación en el sistema.
+ * Proporciona endpoints para inicio de sesión (login con emisión de JWT), consulta de roles
+ * y obtención del nombre del usuario mediante su correo electrónico.
+ *
+ * @author Equipo DevOps Huellitas
+ * @version 1.0
+ */
+@Tag(name = "Usuarios", description = "Endpoints de autenticación, consulta de roles y administración de usuarios")
 @RestController
 @RequestMapping("/usuario")
 public class UsuarioController extends GenericController<UsuarioModel, Integer, UsuarioService> {
 
+    /**
+     * Utilidad para la emisión y codificación de tokens JWT.
+     */
     private final JWTUtil jwtUtil;
+
+    /**
+     * Servicio de auditoría para registrar intentos de autenticación exitosos y fallidos.
+     */
     private final BitacoraService bitacoraService;
 
+    /**
+     * Constructor con inyección de dependencias para autenticación y bitácora.
+     *
+     * @param jwtUtil Utilidad de generación de tokens JWT.
+     * @param bitacoraService Servicio opcional para registro de eventos en la bitácora.
+     */
     public UsuarioController(JWTUtil jwtUtil, @Autowired(required = false) BitacoraService bitacoraService) {
         this.jwtUtil = jwtUtil;
         this.bitacoraService = bitacoraService;
     }
 
+    /**
+     * Endpoint HTTP POST para autenticación de usuarios (login).
+     * Valida el correo y la contraseña, emite un token JWT si las credenciales son válidas
+     * y registra el evento de inicio de sesión en la bitácora de auditoría.
+     *
+     * @param credenciales Mapa con los campos {@code correo} y {@code contrasena}.
+     * @param request Petición HTTP para obtener la dirección IP del cliente.
+     * @return {@link ResponseEntity} con código 200 (OK) y token JWT si es exitoso,
+     *         o código 400 / 401 si las credenciales son incorrectas o faltan campos.
+     */
+    @Operation(summary = "Inicio de sesión", description = "Valida credenciales y emite un token de acceso JWT firmado.", security = {})
     @PostMapping("/login")
     public ResponseEntity<Map<String, Object>> login(@RequestBody Map<String, String> credenciales, HttpServletRequest request) {
         String correo = credenciales.get("correo");
@@ -58,7 +94,7 @@ public class UsuarioController extends GenericController<UsuarioModel, Integer, 
                     );
                 }
 
-                return ResponseEntity.ok(Map.of("login",true, "token", jwtUtil.generarToken(correo, rolId, rolNombre)));
+                return ResponseEntity.ok(Map.of("login", true, "token", jwtUtil.generarToken(correo, rolId, rolNombre)));
             } else {
                 if (bitacoraService != null) {
                     bitacoraService.registrarAccion(
@@ -72,7 +108,7 @@ public class UsuarioController extends GenericController<UsuarioModel, Integer, 
                 }
                 return ResponseEntity.badRequest().body(Map.of("login", false));
             }
-        }   catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException e) {
             if (bitacoraService != null) {
                 bitacoraService.registrarAccion(
                     correo != null ? correo : "Anónimo",
@@ -87,12 +123,26 @@ public class UsuarioController extends GenericController<UsuarioModel, Integer, 
         }
     }
 
+    /**
+     * Endpoint HTTP GET para consultar el identificador del rol asignado a un usuario mediante su correo.
+     *
+     * @param correo Correo electrónico del usuario enviado como parámetro de consulta.
+     * @return {@link ResponseEntity} con código 200 (OK) y el ID del rol o -1 si no fue encontrado.
+     */
+    @Operation(summary = "Consultar rol por correo", description = "Retorna el ID del rol asignado a un usuario por su correo.", security = {})
     @GetMapping("/Rol")
     public ResponseEntity<Integer> getRol(@RequestParam("correo") String correo) {
         Integer idRol = service.buscarIdRol(correo);
         return ResponseEntity.ok(idRol);
     }
 
+    /**
+     * Endpoint HTTP GET para consultar el nombre completo de un usuario a partir de su correo electrónico.
+     *
+     * @param correo Correo del usuario especificado en la ruta.
+     * @return {@link ResponseEntity} con código 200 (OK) y mapa con el nombre completo del usuario.
+     */
+    @Operation(summary = "Obtener nombre por correo", description = "Recupera el nombre y apellidos completos del usuario mediante su correo.")
     @GetMapping("/Nombre/{correo:.+}")
     public ResponseEntity<Map<String, String>> getNombre(@PathVariable String correo) {
         String nombre = service.extraerNombre(correo);

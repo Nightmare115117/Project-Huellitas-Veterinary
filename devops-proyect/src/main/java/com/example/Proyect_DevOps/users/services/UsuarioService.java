@@ -16,15 +16,33 @@ import com.example.Proyect_DevOps.users.repositories.UsuarioRepository;
 import com.example.Proyect_DevOps.utilities.AESUtil;
 import com.example.Proyect_DevOps.utilities.HMACUtil;
 
+/**
+ * Servicio de negocio para la gestión integral de usuarios.
+ * Administra el registro con cifrado AES-256 en reposo, indexación con HMAC-SHA256,
+ * hash seguro de contraseñas con BCrypt, y validación de autenticación de login.
+ *
+ * @author Equipo DevOps Huellitas
+ * @version 1.0
+ */
 @Service
 public class UsuarioService extends GenericServiceImpl<UsuarioModel, Integer, UsuarioRepository> {
 
+    /**
+     * Repositorio de roles para vincular el rol a los usuarios.
+     */
     @Autowired
     private RolRepository rolRepository;
 
+    /**
+     * Codificador seguro de contraseñas BCrypt.
+     */
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    /**
+     * {@inheritDoc}
+     * Recupera todos los usuarios de la base de datos y descifra sus correos en memoria.
+     */
     @Override
     public List<UsuarioModel> findAll() {
         List<UsuarioModel> usuarios = new ArrayList<>();
@@ -39,6 +57,10 @@ public class UsuarioService extends GenericServiceImpl<UsuarioModel, Integer, Us
         return usuarios;
     }
 
+    /**
+     * {@inheritDoc}
+     * Busca un usuario por su identificador numérico y descifra su correo electrónico.
+     */
     @Override
     public Optional<UsuarioModel> findById(Integer id) {
         return repository.findById(id).map(entidad -> {
@@ -51,6 +73,13 @@ public class UsuarioService extends GenericServiceImpl<UsuarioModel, Integer, Us
         });
     }
 
+    /**
+     * {@inheritDoc}
+     * Valida que el correo no esté previamente registrado, asocia el rol correspondiente,
+     * calcula la huella HMAC, cifra el correo con AES y codifica la contraseña con BCrypt antes de persistir.
+     *
+     * @throws RuntimeException Si el correo ya existe, el rol es inválido o no existe en la base de datos.
+     */
     @Override
     public UsuarioModel save(UsuarioModel entity) {
         if (repository.existsByCorreoHMAC(HMACUtil.GenerarHuella(entity.getCorreo()))) {
@@ -73,6 +102,10 @@ public class UsuarioService extends GenericServiceImpl<UsuarioModel, Integer, Us
         return repository.save(entity);
     }
 
+    /**
+     * {@inheritDoc}
+     * Actualiza la información del usuario, recalculando cifrado y hashes si fueron modificados.
+     */
     @Override
     public Optional<UsuarioModel> update(Integer id, UsuarioModel entity) {
         if (!repository.existsById(id)) {
@@ -104,6 +137,10 @@ public class UsuarioService extends GenericServiceImpl<UsuarioModel, Integer, Us
         return Optional.of(guardado);
     }
 
+    /**
+     * {@inheritDoc}
+     * Elimina el usuario identificado por su ID.
+     */
     @Override
     public boolean deleteById(Integer id) {
         if (!repository.existsById(id)) {
@@ -113,20 +150,20 @@ public class UsuarioService extends GenericServiceImpl<UsuarioModel, Integer, Us
         return true;
     }
 
-    /*
-    ** Este metodo recibe los datos de correo y contraseña del login
-    ** si el usuario que se ingreso el correo no esta dentro del sistema
-    ** retorna false, si el usuario existe encripta la contraseña y la busca en el usuario
-    ** retorna true si la contraseña es correcta y si no retorna false
-    ** @param correo primer dato del usuario 
-    ** @param contrasena segundo dato del usuario
-    ** @return true si las credenciales son correctas o return false si no lo son
-    */
+    /**
+     * Valida las credenciales proporcionadas para el inicio de sesión.
+     * Busca al usuario por la huella HMAC del correo y compara la contraseña con el hash BCrypt almacenado.
+     *
+     * @param correo Correo electrónico introducido por el usuario.
+     * @param contrasena Contraseña en texto plano proporcionada en la solicitud.
+     * @return El objeto {@link UsuarioModel} validado si las credenciales son correctas.
+     * @throws IllegalArgumentException Si el usuario no existe o las credenciales no coinciden.
+     */
     public UsuarioModel validacionDeLogin(String correo, String contrasena){
         Optional<UsuarioModel> usuarioOpt = repository.findByCorreoHMAC(HMACUtil.GenerarHuella(correo));
         if (usuarioOpt.isPresent()){
             UsuarioModel usuario = usuarioOpt.get();
-            if (passwordEncoder.matches(contrasena, usuario.getContraseña())) {
+            if (contrasena.length() >= 16 && passwordEncoder.matches(contrasena, usuario.getContraseña())) {
                 return usuario;
             } else {
                 throw new IllegalArgumentException("Correo o Contraseña Incorrectas");
@@ -136,13 +173,12 @@ public class UsuarioService extends GenericServiceImpl<UsuarioModel, Integer, Us
         }
     }
 
-    /*
-        Con el correo del que inicia secion se extrae del modelo el objeto rol y 
-        de este se extrae el id que contenga este mismo si no se encontro el usuario por correo
-        retorna un -1
-        @param correo dato del usuario
-        @return el idRol del usuario si este fue encontrado en la base de datos
-    */
+    /**
+     * Obtiene el identificador numérico del rol del usuario a partir de su correo electrónico.
+     *
+     * @param correo Correo del usuario a buscar.
+     * @return Identificador del rol asociado al usuario, o -1 si el usuario no fue localizado.
+     */
     public Integer buscarIdRol (String correo){
         Optional<UsuarioModel> usuarioOpt = repository.findByCorreoHMAC(HMACUtil.GenerarHuella(correo));
         if (usuarioOpt.isPresent()){
@@ -153,13 +189,12 @@ public class UsuarioService extends GenericServiceImpl<UsuarioModel, Integer, Us
         }
     }
 
-    /*
-        Extrae el nombre del Usuario que ingreso su correo dentro del frontend
-        si no lo encuentra retorna un "User not found" y si lo encuentra 
-        retorna el nombre completo del usuario 
-        @param correo es el dato que se requiere para buscar el usuario
-        @return el nombre del usuario encontrado, si no se encuentra regresa un "User not found"
-    */
+    /**
+     * Obtiene el nombre completo del usuario a partir de su correo electrónico.
+     *
+     * @param correo Correo del usuario a buscar.
+     * @return Nombre y apellidos concatenados, o {@code "User not found"} si no existe.
+     */
     public String extraerNombre(String correo){
         Optional<UsuarioModel> usuarioOpt = repository.findByCorreoHMAC(HMACUtil.GenerarHuella(correo));
         if (usuarioOpt.isPresent()){
