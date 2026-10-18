@@ -27,6 +27,12 @@ public class PaisModel {
      * Nombre oficial o común del país.
      */
     private String nombre;
+    
+    /**
+     * Codigo ISO oficial
+     */
+
+    private String ISO;
 
     /**
      * Constructor por defecto requerido por JPA.
@@ -39,8 +45,9 @@ public class PaisModel {
      *
      * @param nombre Nombre descriptivo del país.
      */
-    public PaisModel(String nombre) {
+    public PaisModel(String nombre, String ISO) {
         this.nombre = nombre;
+        this.ISO = ISO;
     }
 
     /**
@@ -77,6 +84,25 @@ public class PaisModel {
      */
     public void setNombre(String nombre) {
         this.nombre = nombre;
+    }
+
+    /**    (non-Javadoc)
+     * Obtiene el codigo ISO
+     * 
+     * @return ISO del Pais
+     */
+    public String getISO() {
+        return ISO;
+    }
+
+    /**    (non-Javadoc)
+     * Establece el codigo ISO del Pais
+     * 
+     * @param ISO codigo ISO a asignar
+     */
+
+    public void setISO(String ISO) {
+        this.ISO = ISO;
     }
 
     /**
