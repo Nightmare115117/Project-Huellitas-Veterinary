@@ -8,9 +8,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-
 import com.example.Proyect_DevOps.common.controllers.GenericController;
 import com.example.Proyect_DevOps.users.models.RolModel;
 import com.example.Proyect_DevOps.users.services.RolService;
@@ -22,7 +19,6 @@ import com.example.Proyect_DevOps.users.services.RolService;
  * @author Equipo DevOps Huellitas
  * @version 1.0
  */
-@Tag(name = "Roles", description = "Administración de roles de usuario")
 @RestController
 @RequestMapping("/rol")
 public class RolController extends GenericController<RolModel, Integer, RolService> {
@@ -33,7 +29,6 @@ public class RolController extends GenericController<RolModel, Integer, RolServi
      * @param nombreRol Nombre del rol a registrar enviado en el cuerpo de la petición.
      * @return {@link ResponseEntity} con código 200 (OK) y mensaje de confirmación, o 401 si no pudo ser insertado.
      */
-    @Operation(summary = "Insertar rol", description = "Crea un rol nuevo a partir de su nombre.")
     @PostMapping("/insert")
     public ResponseEntity<?> insertRol(@RequestBody String nombreRol) {
         if (service.insertRol(nombreRol)) {

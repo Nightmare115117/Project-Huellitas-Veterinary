@@ -3,8 +3,6 @@ package com.example.Proyect_DevOps.sucursales.controllers;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import io.swagger.v3.oas.annotations.tags.Tag;
-
 import com.example.Proyect_DevOps.common.controllers.GenericController;
 import com.example.Proyect_DevOps.sucursales.models.GestorModel;
 import com.example.Proyect_DevOps.sucursales.services.GestorService;
@@ -16,7 +14,6 @@ import com.example.Proyect_DevOps.sucursales.services.GestorService;
  * @author Equipo DevOps Huellitas
  * @version 1.0
  */
-@Tag(name = "Gestores", description = "Gestores de sucursal")
 @RestController
 @RequestMapping("/gestor")
 public class GestorController extends GenericController<GestorModel, Integer, GestorService> {

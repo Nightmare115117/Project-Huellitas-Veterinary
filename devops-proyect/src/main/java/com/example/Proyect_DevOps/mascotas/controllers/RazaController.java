@@ -7,9 +7,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-
 import com.example.Proyect_DevOps.common.controllers.GenericController;
 import com.example.Proyect_DevOps.mascotas.models.RazaModel;
 import com.example.Proyect_DevOps.mascotas.services.RazaService;
@@ -21,7 +18,6 @@ import com.example.Proyect_DevOps.mascotas.services.RazaService;
  * @author Equipo DevOps Huellitas
  * @version 1.0
  */
-@Tag(name = "Razas", description = "Catálogo de razas y consulta por especie")
 @RestController
 @RequestMapping("/raza")
 public class RazaController extends GenericController<RazaModel, Integer, RazaService> {
@@ -32,7 +28,6 @@ public class RazaController extends GenericController<RazaModel, Integer, RazaSe
      * @param idEspecie Identificador de la especie.
      * @return Lista de {@link RazaModel} pertenecientes a dicha especie.
      */
-    @Operation(summary = "Listar razas por especie", description = "Retorna las razas que pertenecen a la especie indicada.")
     @GetMapping("/especie/{idEspecie:[0-9]+}")
     public List<RazaModel> getRazasByEspecie(@PathVariable int idEspecie) {
         return service.findByEspecieId(idEspecie);
