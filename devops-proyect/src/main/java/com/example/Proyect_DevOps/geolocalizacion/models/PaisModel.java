@@ -1,5 +1,6 @@
 package com.example.Proyect_DevOps.geolocalizacion.models;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -32,6 +33,7 @@ public class PaisModel {
      * Codigo ISO oficial
      */
 
+    @Column(name = "iso")
     private String ISO;
 
     /**
