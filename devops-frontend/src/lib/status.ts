@@ -33,3 +33,9 @@ export function citaStatus(estado?: number): { label: string; tone: StatusTone }
       return { label: 'Desconocida', tone: 'info' }
   }
 }
+
+export function tratamientoStatus(estatus: number): { label: string; tone: StatusTone } {
+  return estatus === 1
+    ? { label: 'Completado', tone: 'success' }
+    : { label: 'En curso', tone: 'pending' }
+}

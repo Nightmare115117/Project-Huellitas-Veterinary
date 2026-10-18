@@ -18,9 +18,9 @@ import StatusBadge from '../components/ui/StatusBadge'
 import { useLogout } from '../hooks/useLogout'
 import { useSession } from '../hooks/useSession'
 import { apiGet } from '../lib/api'
-import { calcularEdad, formatDate, formatTime } from '../lib/format'
-import { citaStatus } from '../lib/status'
-import type { Cita, Mascota, Perfil } from '../types/api'
+import { calcularEdad, dateKey, formatDate, formatMoney, formatTime } from '../lib/format'
+import { citaStatus, tratamientoStatus } from '../lib/status'
+import type { Cita, Mascota, Perfil, Tratamiento } from '../types/api'
 
 type Section = 'inicio' | 'mascotas' | 'citas' | 'tratamientos' | 'historial' | 'perfil'
 
@@ -33,14 +33,12 @@ const navItems: (NavItem & { id: Section })[] = [
   { id: 'perfil', label: 'Perfil', icon: UserRound },
 ]
 
-function especieDe(m: Mascota): string {
-  if (typeof m.raza === 'object') return m.raza.especie?.nombre ?? m.raza.nombre ?? m.especie ?? 'Sin especie'
-  return m.especie ?? 'Sin especie'
-}
+const especieDe = (m: Mascota) => m.raza?.especie?.nombre ?? 'Sin especie'
+const razaDe = (m: Mascota) => m.raza?.nombre ?? 'Sin raza'
 
-function razaDe(m: Mascota): string {
-  if (typeof m.raza === 'object') return m.raza.nombre ?? 'Sin raza'
-  return m.raza ?? m.breed ?? 'Sin raza'
+const tratamientoStatusCell = (t: Tratamiento) => {
+  const { label, tone } = tratamientoStatus(t.estatus)
+  return <StatusBadge label={label} tone={tone} />
 }
 
 const citaStatusCell = (c: Cita) => {
@@ -56,6 +54,7 @@ export default function MenuDueno() {
   const [ownerName, setOwnerName] = useState('Dueño')
   const [mascotas, setMascotas] = useState<Mascota[]>([])
   const [citas, setCitas] = useState<Cita[]>([])
+  const [tratamientos, setTratamientos] = useState<Tratamiento[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -64,21 +63,24 @@ export default function MenuDueno() {
 
     const load = async () => {
       try {
-        const [perfil, mascotasData, citasData] = await Promise.all([
+        const [perfil, mascotasData, citasData, tratamientosData] = await Promise.all([
           apiGet<Perfil>(`/usuario/Nombre/${correo}`),
           apiGet<Mascota[]>(`/mascota/${correo}`),
           apiGet<Cita[]>(`/cita/${correo}`),
+          apiGet<Tratamiento[]>(`/tratamiento/usuario/${correo}`),
         ])
         if (!isMounted) return
         setOwnerName(perfil?.nombre || 'Dueño')
         setMascotas(Array.isArray(mascotasData) ? mascotasData : [])
         setCitas(Array.isArray(citasData) ? citasData : [])
+        setTratamientos(Array.isArray(tratamientosData) ? tratamientosData : [])
       } catch (error) {
         console.error(error)
         if (isMounted) {
           setOwnerName('Dueño')
           setMascotas([])
           setCitas([])
+          setTratamientos([])
         }
       } finally {
         if (isMounted) setLoading(false)
@@ -92,11 +94,16 @@ export default function MenuDueno() {
   }, [correo])
 
   const pet = mascotas[0] ?? null
-  const petName = pet?.nombre || (mascotas.length > 0 ? 'Mis mascotas' : 'Mi mascota')
   const petListSummary =
     mascotas.length > 0 ? mascotas.map((m) => m.nombre || 'Mascota').join(', ') : 'Sin mascotas'
+  const mascotaDe = (idMascota: number) => mascotas.find((m) => m.idMascota === idMascota)?.nombre ?? '--'
+  // La próxima cita es la más cercana desde hoy que no esté cancelada (antes salía la más antigua)
+  const hoy = dateKey(new Date().toISOString())
   const nextCita =
-    [...citas].sort((a, b) => new Date(a.fecha ?? '').getTime() - new Date(b.fecha ?? '').getTime())[0] ?? null
+    citas
+      .filter((c) => c.estadoCita !== 3 && c.fecha != null && c.fecha >= hoy)
+      .sort((a, b) => `${a.fecha}${a.entradaAgendada}`.localeCompare(`${b.fecha}${b.entradaAgendada}`))[0] ?? null
+  const tratamientosActivos = tratamientos.filter((t) => t.estatus === 0).length
 
   const mascotaColumns: Column<Mascota>[] = [
     { header: 'Nombre', cell: (m) => m.nombre },
@@ -116,16 +123,24 @@ export default function MenuDueno() {
   const citaColumns: Column<Cita>[] = [
     { header: 'Fecha', cell: (c) => formatDate(c.fecha) },
     { header: 'Hora', cell: (c) => formatTime(c.entradaAgendada) },
-    { header: 'Motivo', cell: () => 'Consulta veterinaria' },
+    { header: 'Mascota', cell: (c) => mascotaDe(c.idMascota) },
     { header: 'Doctor', cell: (c) => c.nombreVeterinario || 'Pendiente' },
     { header: 'Estado', cell: citaStatusCell },
   ]
 
+  const tratamientoColumns: Column<Tratamiento>[] = [
+    { header: 'Medicamento', cell: (t) => t.medicamento },
+    { header: 'Descripción', cell: (t) => t.descripcion },
+    { header: 'Mascota', cell: (t) => t.mascotaNombre },
+    { header: 'Costo', cell: (t) => formatMoney(t.costo) },
+    { header: 'Estado', cell: tratamientoStatusCell },
+  ]
+
   const historialColumns: Column<Cita>[] = [
     { header: 'Fecha', cell: (c) => formatDate(c.fecha) },
-    { header: 'Tipo', cell: () => 'Consulta' },
+    { header: 'Mascota', cell: (c) => mascotaDe(c.idMascota) },
     { header: 'Veterinario', cell: (c) => c.nombreVeterinario || 'Pendiente' },
-    { header: 'Resultado', cell: citaStatusCell },
+    { header: 'Estado', cell: citaStatusCell },
   ]
 
   return (
@@ -163,12 +178,11 @@ export default function MenuDueno() {
                       : 'Sin citas registradas'
                   }
                 />
-                {/* TODO: dato de ejemplo, falta un endpoint de tratamientos para el dueño */}
                 <StatCard
                   icon={Pill}
-                  title="Tratamiento"
-                  value={pet ? 'Activo' : 'Sin dato'}
-                  detail={pet ? 'Revisión y cuidado continuo' : 'No hay información disponible'}
+                  title="Tratamientos activos"
+                  value={tratamientosActivos}
+                  detail={tratamientos.length > 0 ? `${tratamientos.length} registrados` : 'Sin tratamientos registrados'}
                 />
                 <StatCard
                   icon={ClipboardList}
@@ -225,17 +239,11 @@ export default function MenuDueno() {
             <>
               <PageHeader title="Tratamientos" subtitle="Medicamentos y cuidados actuales" />
               <Panel>
-                {/* TODO: dato de ejemplo (igual que en la versión JSX): reemplazar por datos reales */}
                 <DataTable
-                  caption="Tratamientos actuales"
-                  columns={[
-                    { header: 'Medicamento', cell: () => 'Antiinflamatorio' },
-                    { header: 'Descripción', cell: () => 'Seguimiento veterinario' },
-                    { header: 'Frecuencia', cell: () => 'Cada 12 horas' },
-                    { header: 'Estado', cell: () => <StatusBadge label="Activo" tone="success" /> },
-                  ]}
-                  rows={pet ? [pet] : []}
-                  getRowKey={(p) => p.idMascota ?? p.nombre ?? 'tratamiento'}
+                  caption="Tratamientos"
+                  columns={tratamientoColumns}
+                  rows={tratamientos}
+                  getRowKey={(t, i) => `${t.idTratamiento}-${i}`}
                   emptyMessage="Sin información de tratamientos."
                 />
               </Panel>
@@ -244,7 +252,7 @@ export default function MenuDueno() {
 
           {active === 'historial' && (
             <>
-              <PageHeader title="Historial" subtitle={`Registros médicos de ${petName}`} />
+              <PageHeader title="Historial" subtitle="Citas registradas de tus mascotas" />
               <Panel>
                 <DataTable
                   caption="Historial médico"

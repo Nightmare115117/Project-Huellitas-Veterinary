@@ -59,3 +59,7 @@ export function dateKey(value?: string | null): string {
   const day = String(date.getDate()).padStart(2, '0')
   return `${date.getFullYear()}-${month}-${day}`
 }
+
+export function formatMoney(value: number): string {
+  return value.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })
+}
