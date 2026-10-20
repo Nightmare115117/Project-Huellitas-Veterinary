@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import { LogOut, Menu, X, type LucideIcon } from 'lucide-react'
+import { LogOut, Menu, ShieldCheck, X, type LucideIcon } from 'lucide-react'
 import { getCorreo } from '../../lib/session'
+import MfaDialog from '../ui/MfaDialog'
 import Brand from './Brand'
 
 export interface NavItem {
@@ -29,6 +30,7 @@ export default function AppShell({
   children,
 }: AppShellProps) {
   const [menuOpen, setMenuOpen] = useState(false)
+  const [mfaOpen, setMfaOpen] = useState(false)
 
   useEffect(() => {
     if (!menuOpen) return
@@ -100,6 +102,17 @@ export default function AppShell({
               <span>{label}</span>
             </button>
           ))}
+          <button
+            type="button"
+            className="nav__item"
+            onClick={() => {
+              setMfaOpen(true)
+              setMenuOpen(false)
+            }}
+          >
+            <ShieldCheck size={20} aria-hidden />
+            <span>Seguridad</span>
+          </button>
         </nav>
 
         <button type="button" className="logout" onClick={onLogout}>
@@ -111,6 +124,8 @@ export default function AppShell({
       <main id="contenido" className="content" tabIndex={-1}>
         {children}
       </main>
+
+      {mfaOpen && <MfaDialog onClose={() => setMfaOpen(false)} />}
     </div>
   )
 }

@@ -6,9 +6,19 @@ export const Rol = {
 } as const
 export type Rol = (typeof Rol)[keyof typeof Rol]
 
+/** Con MFA activo el login responde login:false, mfaneed:true y un temToken (5 min) */
 export interface LoginResponse {
   login: boolean
-  token: string
+  token?: string
+  mfaneed?: boolean
+  temToken?: string
+}
+
+/** POST /usuario/mfa/verify */
+export interface MfaVerifyResponse {
+  validacion: boolean
+  login: boolean
+  token?: string
 }
 
 export interface Perfil {
