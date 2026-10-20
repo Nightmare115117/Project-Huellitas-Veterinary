@@ -608,14 +608,9 @@
   width: min(92vw, 440px);
 }
 
-.mfa__secret {
-  margin: var(--space-4) 0;
-  padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--glass-border);
+.mfa__qr {
+  display: block;
+  width: min(100%, 240px);
+  margin: var(--space-4) auto;
   border-radius: var(--radius-md, 12px);
-  background: var(--glass-hover);
-  font-family: ui-monospace, monospace;
-  letter-spacing: 0.08em;
-  word-break: break-all;
-  user-select: all;
 }

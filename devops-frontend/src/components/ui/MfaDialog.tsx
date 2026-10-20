@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { alerts } from '../../lib/alerts'
 import { ApiError, apiPost } from '../../lib/api'
+import QrCode from './QrCode'
 
 interface SetupResponse {
   qrUri: string
@@ -112,15 +113,10 @@ export default function MfaDialog({ onClose }: { onClose: () => void }) {
         {paso === 'confirmar' && setup && (
           <>
             <p className="muted">
-              En tu app agrega una cuenta con esta clave (o abre el enlace desde tu celular) y escribe
-              el código que genere.
+              Escanea este QR con Google Authenticator (u otra app TOTP) y escribe el código de 6
+              dígitos que genere.
             </p>
-            <p className="mfa__secret" aria-label="Clave secreta">
-              {setup.secreto}
-            </p>
-            <p>
-              <a href={setup.qrUri}>Abrir en mi app de autenticación</a>
-            </p>
+            <QrCode valor={setup.qrUri} />
             {campoCodigo}
           </>
         )}
