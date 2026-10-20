@@ -602,3 +602,20 @@
 .swal2-popup .swal2-success [class^='swal2-success-line'] {
   background-color: var(--success);
 }
+
+/* ── MFA ── */
+.dialog--sm {
+  width: min(92vw, 440px);
+}
+
+.mfa__secret {
+  margin: var(--space-4) 0;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md, 12px);
+  background: var(--glass-hover);
+  font-family: ui-monospace, monospace;
+  letter-spacing: 0.08em;
+  word-break: break-all;
+  user-select: all;
+}
