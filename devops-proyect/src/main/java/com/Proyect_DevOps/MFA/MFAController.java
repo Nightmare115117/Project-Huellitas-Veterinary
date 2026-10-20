@@ -167,7 +167,7 @@ public class MFAController {
 
         Jwt jwt = auth.getToken();
         String correo = jwt.getSubject();
-        int rolId = jwt.getClaim("role_id");
+        int rolId = ((Number) jwt.getClaim("role_id")).intValue();
         String rolNombre = jwt.getClaimAsString("roles");
 
         UsuarioModel usuario = usuarioService.buscarPorCorreo(correo);
