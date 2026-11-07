@@ -166,6 +166,15 @@ public class ConsultaMedicaModel {
     }
 
     /**
+     * Obtiene el diagnóstico clínico veterinario.
+     *
+     * @return Diagnóstico médico.
+     */
+    public String getDiagnostico(){
+        return diagnostico;
+    }
+
+    /**
      * Asigna el diagnóstico de la consulta.
      *
      * @param diagnostico Diagnóstico veterinario.
@@ -207,6 +216,24 @@ public class ConsultaMedicaModel {
      * @param tratamientos Lista de tratamientos prescritos.
      */
     public void setListaTratamientos(List<TratamientoModel> tratamientos){
+        this.tratamientos = tratamientos;
+    }
+
+    /**
+     * Obtiene la lista de tratamientos asociados a esta consulta.
+     *
+     * @return Lista de {@link TratamientoModel}.
+     */
+    public List<TratamientoModel> getTratamientos(){
+        return tratamientos;
+    }
+
+    /**
+     * Asigna la lista de tratamientos de la consulta médica.
+     *
+     * @param tratamientos Lista de tratamientos prescritos.
+     */
+    public void setTratamientos(List<TratamientoModel> tratamientos){
         this.tratamientos = tratamientos;
     }
 

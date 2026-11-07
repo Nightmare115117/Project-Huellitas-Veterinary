@@ -34,4 +34,12 @@ public interface MascotaRepository extends JpaRepository<MascotaModel, Integer>{
      */
     long countByUsuario(UsuarioModel usuario);
 
+    /**
+     * Obtiene el listado de mascotas adscritas a una sucursal específica.
+     *
+     * @param idSucursal Identificador de la sucursal.
+     * @return Lista de mascotas de la sucursal.
+     */
+    List<MascotaModel> findBySucursal_IdSucursal(int idSucursal);
+
 }

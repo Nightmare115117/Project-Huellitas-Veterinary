@@ -9,40 +9,37 @@ import javax.crypto.spec.SecretKeySpec;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.convert.converter.Converter;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-
-import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.access.expression.WebExpressionAuthorizationManager;
+import org.springframework.security.oauth2.core.OAuth2TokenValidator;
+import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.JwtEncoder;
+import org.springframework.security.oauth2.jwt.JwtValidators;
+import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
+import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
-
-import org.springframework.security.oauth2.core.OAuth2TokenValidator;
-import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.security.oauth2.jwt.JwtValidators;
-import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
-import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
-import org.springframework.core.convert.converter.Converter;
-import org.springframework.security.oauth2.jwt.JwtEncoder;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
-
-import com.nimbusds.jose.jwk.source.ImmutableSecret;
-
-import io.github.cdimascio.dotenv.Dotenv;
-import io.github.cdimascio.dotenv.DotenvException;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.expression.WebExpressionAuthorizationManager;
 
 import com.Proyect_DevOps.utilities.AESUtil;
 import com.Proyect_DevOps.utilities.HMACUtil;
 import com.Proyect_DevOps.utilities.JWTTest;
+import com.nimbusds.jose.jwk.source.ImmutableSecret;
 
+import io.github.cdimascio.dotenv.Dotenv;
+import io.github.cdimascio.dotenv.DotenvException;
 import jakarta.annotation.PostConstruct;
 
 /**
@@ -57,13 +54,63 @@ import jakarta.annotation.PostConstruct;
 public class SecurityConfig {
 
     /**
-     * Define el codificador de contraseñas utilizando el algoritmo BCrypt con fuerza 12.
+     * Define el codificador Argon2id con parámetros recomendados de Spring Security (Argon2id).
      *
+     * @return Instancia de {@link Argon2PasswordEncoder}.
+     */
+    @Bean
+    public Argon2PasswordEncoder argon2PasswordEncoder() {
+        return Argon2PasswordEncoder.defaultsForSpringSecurity_v5_8();
+    }
+
+    /**
+     * Define el codificador legado BCrypt con fuerza 12 para validar usuarios antiguos.
+     *
+     * @return Instancia de {@link BCryptPasswordEncoder}.
+     */
+    @Bean
+    public BCryptPasswordEncoder bCryptPasswordEncoder() {
+        return new BCryptPasswordEncoder(12);
+    }
+
+    /**
+     * Define el codificador de contraseñas utilizando Argon2id por defecto, con soporte de
+     * verificación hacia atrás y migración progresiva para cuentas existentes con hash BCrypt.
+     *
+     * @param argon2Encoder Codificador Argon2id.
+     * @param bCryptEncoder Codificador BCrypt legado.
      * @return Instancia configurada de {@link PasswordEncoder}.
      */
     @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder(12);
+    public PasswordEncoder passwordEncoder(Argon2PasswordEncoder argon2Encoder, BCryptPasswordEncoder bCryptEncoder) {
+        return new PasswordEncoder() {
+            @Override
+            public String encode(CharSequence rawPassword) {
+                return argon2Encoder.encode(rawPassword);
+            }
+
+            @Override
+            public boolean matches(CharSequence rawPassword, String encodedPassword) {
+                if (encodedPassword == null) {
+                    return false;
+                }
+                if (encodedPassword.startsWith("$argon2")) {
+                    return argon2Encoder.matches(rawPassword, encodedPassword);
+                }
+                if (encodedPassword.startsWith("$2a$") || encodedPassword.startsWith("$2b$") || encodedPassword.startsWith("$2y$")) {
+                    return bCryptEncoder.matches(rawPassword, encodedPassword);
+                }
+                return argon2Encoder.matches(rawPassword, encodedPassword) || bCryptEncoder.matches(rawPassword, encodedPassword);
+            }
+
+            @Override
+            public boolean upgradeEncoding(String encodedPassword) {
+                if (encodedPassword == null || !encodedPassword.startsWith("$argon2")) {
+                    return true;
+                }
+                return argon2Encoder.upgradeEncoding(encodedPassword);
+            }
+        };
     }
 
     /**
@@ -92,10 +139,25 @@ public class SecurityConfig {
                 .requestMatchers("/usuario/Rol")
                     .permitAll()
 
+                .requestMatchers(HttpMethod.GET, "/usuario/Nombre/**")
+                    .hasAuthority("TOKEN_access")
+
                 .requestMatchers("/bitacora", "/bitacora/**")
                     .access(new WebExpressionAuthorizationManager(
                         "hasAuthority('TOKEN_access') and " +
                         "(hasAuthority('Admin') or hasAuthority('Administrador'))"
+                    ))
+
+                .requestMatchers("/gestor", "/gestor/**")
+                    .access(new WebExpressionAuthorizationManager(
+                        "hasAuthority('TOKEN_access') and " +
+                        "(hasAuthority('GESTOR') or hasAuthority('Gestor'))"
+                    ))
+
+                .requestMatchers("/veterinario", "/veterinario/**")
+                    .access(new WebExpressionAuthorizationManager(
+                        "hasAuthority('TOKEN_access') and " +
+                        "(hasAuthority('VETERINARIO') or hasAuthority('Veterinario'))"
                     ))
 
                 .requestMatchers("/usuario/mfa/verify")
@@ -104,7 +166,7 @@ public class SecurityConfig {
                 .requestMatchers("/usuario/mfa/setup", "/usuario/mfa/confirm", "/usuario/mfa/disable")
                     .hasAuthority("TOKEN_access")
 
-                .requestMatchers("/usuario")
+                .requestMatchers("/usuario", "/usuario/**")
                     .access(new WebExpressionAuthorizationManager(
                         "hasAuthority('TOKEN_access') and " +
                         "(hasAuthority('Admin') or hasAuthority('Administrador'))"

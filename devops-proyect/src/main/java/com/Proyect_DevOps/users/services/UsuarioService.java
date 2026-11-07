@@ -6,11 +6,14 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.Proyect_DevOps.MFA.MFAService;
 import com.Proyect_DevOps.common.services.GenericServiceImpl;
+import com.Proyect_DevOps.sucursales.repositories.SucursalRepository;
 import com.Proyect_DevOps.users.models.RolModel;
 import com.Proyect_DevOps.users.models.UsuarioModel;
 import com.Proyect_DevOps.users.repositories.RolRepository;
@@ -40,6 +43,15 @@ public class UsuarioService extends GenericServiceImpl<UsuarioModel, Integer, Us
      */
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private Argon2PasswordEncoder argon2PasswordEncoder;
+
+    @Autowired
+    private BCryptPasswordEncoder bCryptPasswordEncoder;
+
+    @Autowired
+    private SucursalRepository sucursalRepository;
 
     @Autowired
     private MFAService service;
@@ -124,13 +136,17 @@ public class UsuarioService extends GenericServiceImpl<UsuarioModel, Integer, Us
         }
 
         if (entity.getContraseña() != null && !entity.getContraseña().isBlank()) {
-            if (!entity.getContraseña().startsWith("$2a$")) {
+            if (!entity.getContraseña().startsWith("$argon2") && !entity.getContraseña().startsWith("$2")) {
                 entity.setContraseña(passwordEncoder.encode(entity.getContraseña()));
             }
         }
 
         if (entity.getRol() != null && entity.getRol().getIdRol() > 0) {
             rolRepository.findById(entity.getRol().getIdRol()).ifPresent(entity::setRol);
+        }
+
+        if (entity.getSucursal() != null && entity.getSucursal().getIdSucursal() > 0) {
+            sucursalRepository.findById(entity.getSucursal().getIdSucursal()).ifPresent(entity::setSucursal);
         }
 
         UsuarioModel guardado = repository.save(entity);
@@ -168,22 +184,48 @@ public class UsuarioService extends GenericServiceImpl<UsuarioModel, Integer, Us
         Optional<UsuarioModel> usuarioOpt = repository.findByCorreoHMAC(HMACUtil.GenerarHuella(correo));
         if (usuarioOpt.isPresent()){
             UsuarioModel usuario = usuarioOpt.get();
-            if ((contrasena.length() >= 8 && contrasena.length() <= 16) && passwordEncoder.matches(contrasena, usuario.getContraseña())) {
-                if (usuario.isMFANeeded() && mfacode != 0) {
-                    if (usuario.getSecretoMFA() == null) {
-                        throw new IllegalArgumentException("No se pudo verificar su MFA contacte con el administrador");
-                    }
-                    if (service.verificarCodigo(AESUtil.desencriptar(usuario.getSecretoMFA()), mfacode)) {
-                        return usuario;
-                    } else {
-                        throw new IllegalArgumentException("Codigo incorrecto");
+            String hash = usuario.getContraseña();
+            if (contrasena != null && (contrasena.length() >= 8 && contrasena.length() <= 16)) {
+                boolean match = false;
+                boolean upgradeNeeded = false;
+
+                if (hash != null && hash.startsWith("$argon2")) {
+                    match = argon2PasswordEncoder.matches(contrasena, hash);
+                } else if (hash != null && (hash.startsWith("$2a$") || hash.startsWith("$2b$") || hash.startsWith("$2y$"))) {
+                    match = bCryptPasswordEncoder.matches(contrasena, hash);
+                    if (match) {
+                        upgradeNeeded = true;
                     }
                 } else {
-                    return usuario;
+                    if (argon2PasswordEncoder.matches(contrasena, hash)) {
+                        match = true;
+                    } else if (bCryptPasswordEncoder.matches(contrasena, hash)) {
+                        match = true;
+                        upgradeNeeded = true;
+                    }
                 }
-            } else {
-                throw new IllegalArgumentException("Correo o Contraseña Incorrectas");
+
+                if (match) {
+                    if (upgradeNeeded) {
+                        // Migración progresiva a Argon2id
+                        usuario.setContraseña(argon2PasswordEncoder.encode(contrasena));
+                        repository.save(usuario);
+                    }
+                    if (usuario.isMFANeeded() && mfacode != 0) {
+                        if (usuario.getSecretoMFA() == null) {
+                            throw new IllegalArgumentException("No se pudo verificar su MFA contacte con el administrador");
+                        }
+                        if (service.verificarCodigo(AESUtil.desencriptar(usuario.getSecretoMFA()), mfacode)) {
+                            return usuario;
+                        } else {
+                            throw new IllegalArgumentException("Codigo incorrecto");
+                        }
+                    } else {
+                        return usuario;
+                    }
+                }
             }
+            throw new IllegalArgumentException("Correo o Contraseña Incorrectas");
         } else {
             throw new IllegalArgumentException("Correo o Contraseñas Incorrectas");
         }

@@ -7,6 +7,7 @@ const tracksByMonth: Partial<Record<number, string>> = {
   1: `${base}Music/TANK QUINCEAÑERA (PARODIA).mp3`,
   2: `${base}Music/La mejor música de elevador o ascensor.mp3`,
   7: `${base}Music/Marcha militar alemana _Erika_ - Subtitulado en Español(MP3_160K).mp3`,
+  10: `${base}Music/videoplayback.m4a`,
   11: `${base}Music/Sleigh Ride (Indian Christmas Remix) - Vindaloo Singh.mp3`,
 }
 

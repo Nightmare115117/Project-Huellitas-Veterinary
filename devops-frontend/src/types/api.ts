@@ -3,6 +3,8 @@ export const Rol = {
   Administrador: 1,
   Dueno: 2,
   Gestor: 3,
+  /** shortcut: id asumido (4); ajustar al id_rol real de `roles` */
+  Veterinario: 4,
 } as const
 export type Rol = (typeof Rol)[keyof typeof Rol]
 
@@ -64,3 +66,96 @@ export interface Tratamiento {
  * reciben como registros desconocidos y se normalizan en lib/normalize.ts
  */
 export type UnknownRecord = Record<string, unknown>
+
+/* ── Gestor: todo viene acotado a la sucursal del gestor (ver api.md) ── */
+
+export interface SucursalInfo {
+  idSucursal: number
+  calle: string
+  colonia: string
+  ciudad: string
+  estado: string
+  pais: string
+  codigoPostal: string | number
+  rfcGestor: string
+}
+
+export interface CitaSucursal {
+  idCita: number
+  fecha: string | null
+  entradaAgendada: string | null
+  estadoCita: number
+  mascotaNombre: string
+  duenoNombre: string
+  idVeterinario: number | null
+  veterinarioNombre: string | null
+}
+
+export interface PersonaSucursal {
+  idUsuario: number
+  nombre: string
+  paterno: string
+  materno: string | null
+  correo: string
+}
+
+export interface MascotaSucursal {
+  idMascota: number
+  nombre: string
+  especie: string
+  raza: string
+  fechaNacimiento: string | null
+  duenoNombre: string
+}
+
+export interface Reportes {
+  totalCitas: number
+  citasPorEstado: { estado: number; total: number }[]
+  citasPorVeterinario: { veterinario: string; total: number }[]
+  ingresosServicios: number
+  ingresosTratamientos: number
+  serviciosTop: { nombre: string; total: number; ingreso: number }[]
+}
+
+/* ── Veterinario: solo genera recetas (consulta médica + tratamientos) ── */
+
+export interface CitaVeterinario {
+  idCita: number
+  fecha: string | null
+  entradaAgendada: string | null
+  estadoCita: number
+  mascotaNombre: string
+  especie: string
+  raza: string
+  duenoNombre: string
+  tieneReceta: boolean
+}
+
+export interface Medicamento {
+  medicamento: string
+  descripcion: string
+  costo: number
+}
+
+export interface Receta {
+  idConsulta: number
+  idCita: number
+  fecha: string | null
+  mascotaNombre: string
+  duenoNombre: string
+  motivo: string
+  diagnostico: string
+  peso: number
+  recomendaciones: string
+  tratamientos: Medicamento[]
+}
+
+/** Cuerpo de POST /veterinario/{correo}/recetas */
+export interface RecetaNueva {
+  idCita: number
+  motivo: string
+  diagnostico: string
+  peso: number
+  recomendaciones: string
+  tratamientos: Medicamento[]
+}

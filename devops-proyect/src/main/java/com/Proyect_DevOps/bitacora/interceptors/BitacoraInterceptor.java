@@ -170,6 +170,8 @@ public class BitacoraInterceptor implements HandlerInterceptor {
         if (cleanUri.contains("/rol")) return "Roles";
         if (cleanUri.contains("/servicio")) return "Servicios";
         if (cleanUri.contains("/sucursal")) return "Sucursales";
+        if (cleanUri.contains("/receta")) return "Recetas";
+        if (cleanUri.contains("/veterinario")) return "Veterinarios";
         if (cleanUri.contains("/gestor")) return "Gestores";
         if (cleanUri.contains("/direccion") || cleanUri.contains("/calle") || cleanUri.contains("/ciudad")
                 || cleanUri.contains("/colonia") || cleanUri.contains("/estado") || cleanUri.contains("/pais")) {
@@ -197,6 +199,20 @@ public class BitacoraInterceptor implements HandlerInterceptor {
         String lowerUri = uri != null ? uri.toLowerCase() : "";
 
         // Casos de negocio específicos
+        if (lowerUri.contains("/veterinarios")) {
+            return switch (upperMethod) {
+                case "POST" -> "CREAR_VETERINARIO";
+                case "PUT" -> "ACTUALIZAR_VETERINARIO";
+                case "DELETE" -> "ELIMINAR_VETERINARIO";
+                default -> upperMethod + "_VETERINARIO";
+            };
+        }
+        if (lowerUri.contains("/recetas")) {
+            if ("POST".equals(upperMethod)) return "CREAR_RECETA";
+        }
+        if (lowerUri.contains("/citas") && "PUT".equals(upperMethod)) {
+            return "ACTUALIZAR_CITA";
+        }
         if (lowerUri.contains("/cita/cancelar")) {
             return "CANCELAR_CITA";
         }
@@ -237,6 +253,8 @@ public class BitacoraInterceptor implements HandlerInterceptor {
         if (uri.contains("/rol")) return "ROL";
         if (uri.contains("/servicio")) return "SERVICIO";
         if (uri.contains("/sucursal")) return "SUCURSAL";
+        if (uri.contains("/receta")) return "RECETA";
+        if (uri.contains("/veterinario")) return "VETERINARIO";
         if (uri.contains("/gestor")) return "GESTOR";
         if (uri.contains("/direccion")) return "DIRECCION";
         if (uri.contains("/calle")) return "CALLE";

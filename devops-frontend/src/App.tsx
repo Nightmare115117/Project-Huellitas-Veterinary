@@ -3,6 +3,7 @@ import Login from './pages/Login'
 import MenuDueno from './pages/MenuDueno'
 import MenuGestor from './pages/MenuGestor'
 import MenuAdministrador from './pages/MenuAdministrador'
+import MenuVeterinario from './pages/MenuVeterinario'
 
 export default function App() {
   return (
@@ -12,6 +13,7 @@ export default function App() {
         <Route path="/MainMenu/" element={<MenuDueno />} />
         <Route path="/MainMenuGestor" element={<MenuGestor />} />
         <Route path="/MainMenuAdministrador" element={<MenuAdministrador />} />
+        <Route path="/MainMenuVeterinario" element={<MenuVeterinario />} />
       </Routes>
     </Router>
   )

@@ -1,5 +1,6 @@
 package com.Proyect_DevOps.users.repositories;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -32,4 +33,13 @@ public interface UsuarioRepository extends JpaRepository<UsuarioModel, Integer> 
      * @return {@code true} si ya existe un registro con dicha huella, {@code false} en caso contrario.
      */
     boolean existsByCorreoHMAC(String correo);
+
+    /**
+     * Busca usuarios asociados a un rol específico y a una sucursal determinada.
+     *
+     * @param idRol Identificador numérico del rol.
+     * @param idSucursal Identificador de la sucursal.
+     * @return Lista de usuarios coincidentes.
+     */
+    List<UsuarioModel> findByRol_IdRolAndSucursal_IdSucursal(int idRol, int idSucursal);
 }
