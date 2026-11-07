@@ -58,6 +58,13 @@ public class BitacoraInterceptorTest {
         assertEquals("CREAR_MASCOTA", interceptor.resolverAccion("POST", "/mascota"));
         assertEquals("ACTUALIZAR_USUARIO", interceptor.resolverAccion("PUT", "/usuario/10"));
         assertEquals("ELIMINAR_SERVICIO", interceptor.resolverAccion("DELETE", "/servicio/2"));
+
+        // Acciones relevantes del frontend Gestor y Veterinario
+        assertEquals("CREAR_VETERINARIO", interceptor.resolverAccion("POST", "/gestor/luis@huellitas.mx/veterinarios"));
+        assertEquals("ACTUALIZAR_VETERINARIO", interceptor.resolverAccion("PUT", "/gestor/luis@huellitas.mx/veterinarios/7"));
+        assertEquals("ELIMINAR_VETERINARIO", interceptor.resolverAccion("DELETE", "/gestor/luis@huellitas.mx/veterinarios/7"));
+        assertEquals("ACTUALIZAR_CITA", interceptor.resolverAccion("PUT", "/gestor/luis@huellitas.mx/citas/10"));
+        assertEquals("CREAR_RECETA", interceptor.resolverAccion("POST", "/veterinario/vet@huellitas.mx/recetas"));
     }
 
     @Test

@@ -614,3 +614,112 @@
   margin: var(--space-4) auto;
   border-radius: var(--radius-md, 12px);
 }
+
+/* ── Gestor / Veterinario ── */
+.control--inline {
+  min-height: 44px;
+  min-width: 180px;
+}
+
+.control--area {
+  min-height: 96px;
+  padding: var(--space-3) var(--space-4);
+  resize: vertical;
+}
+
+.icon-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.field--full {
+  grid-column: 1 / -1;
+}
+
+.med-row {
+  display: grid;
+  gap: var(--space-3);
+  margin: var(--space-4) 0;
+  padding: var(--space-4);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+}
+
+.med-row legend {
+  padding: 0 var(--space-2);
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+/* Barras de reportes: el número va en texto junto a la barra */
+.bars {
+  display: grid;
+  gap: var(--space-3);
+  list-style: none;
+}
+
+.bars li {
+  display: grid;
+  grid-template-columns: minmax(90px, 200px) 1fr 3ch;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.bars__track {
+  height: 12px;
+  border-radius: 999px;
+  background: var(--blue-tint);
+  overflow: hidden;
+}
+
+.bars__fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--blue-400);
+  transition: width var(--t-base) var(--ease);
+}
+
+.bars__value {
+  text-align: right;
+}
+
+.receta h3 {
+  margin: var(--space-4) 0 var(--space-2);
+  font-size: 16px;
+}
+
+.receta__meds {
+  display: grid;
+  gap: var(--space-3);
+  padding-left: var(--space-5);
+}
+
+.receta__meds li > * {
+  display: block;
+}
+
+.receta__firma {
+  margin-top: var(--space-6);
+  text-align: right;
+}
+
+/* Impresión: solo la receta, en blanco y negro */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  .receta,
+  .receta * {
+    visibility: visible;
+    color: #000 !important;
+  }
+
+  .receta {
+    position: fixed;
+    inset: 0;
+    padding: 24px;
+    background: #fff;
+  }
+}

@@ -1,5 +1,6 @@
 package com.Proyect_DevOps.citas.repositories;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -43,4 +44,38 @@ public interface CitaRepository extends JpaRepository<CitaModel, Integer>{
      * @return Lista de citas pertenecientes al usuario.
      */
     List<CitaModel> findByUsuarioMascota(UsuarioModel usuario);
+
+    /**
+     * Obtiene todas las citas adscritas a mascotas de una sucursal específica.
+     *
+     * @param idSucursal Identificador de la sucursal.
+     * @return Lista de citas médicas.
+     */
+    List<CitaModel> findByMascotaModel_Sucursal_IdSucursal(int idSucursal);
+
+    /**
+     * Obtiene las citas de una sucursal dentro de un rango de fechas inclusivo.
+     *
+     * @param idSucursal Identificador de la sucursal.
+     * @param desde Fecha inicial inclusiva.
+     * @param hasta Fecha final inclusiva.
+     * @return Lista de citas médicas.
+     */
+    List<CitaModel> findByMascotaModel_Sucursal_IdSucursalAndFechaBetween(int idSucursal, LocalDate desde, LocalDate hasta);
+
+    /**
+     * Obtiene las citas asignadas a un veterinario en particular.
+     *
+     * @param idUsuario Identificador del veterinario.
+     * @return Lista de citas asignadas.
+     */
+    List<CitaModel> findByUsuarioVeterinario_IdUsuario(int idUsuario);
+
+    /**
+     * Verifica si existen citas asignadas a un veterinario determinado.
+     *
+     * @param idUsuario Identificador del veterinario.
+     * @return {@code true} si tiene citas asignadas, {@code false} de lo contrario.
+     */
+    boolean existsByUsuarioVeterinario_IdUsuario(int idUsuario);
 }

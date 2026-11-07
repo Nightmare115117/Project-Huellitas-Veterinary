@@ -1,5 +1,7 @@
 package com.Proyect_DevOps.users.models;
 
+import com.Proyect_DevOps.sucursales.models.SucursalModel;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -79,6 +81,13 @@ public class UsuarioModel {
     @ManyToOne
     @JoinColumn(name = "idRol")
     private RolModel rol;
+
+    /**
+     * Sucursal médica a la cual pertenece el usuario (ej. veterinarios adscritos).
+     */
+    @ManyToOne
+    @JoinColumn(name = "id_sucursal", nullable = true)
+    private SucursalModel sucursal;
     
     /**
      * Constructor completo para registrar un usuario.
@@ -281,5 +290,23 @@ public class UsuarioModel {
 
     public void setSecretoPendienteMFA(String secretoPendienteMFA) {
         this.secretoPendienteMFA = secretoPendienteMFA;
+    }
+
+    /**
+     * Obtiene la sucursal a la que está adscrito el usuario.
+     *
+     * @return Instancia de {@link SucursalModel}.
+     */
+    public SucursalModel getSucursal() {
+        return sucursal;
+    }
+
+    /**
+     * Asocia una sucursal al usuario.
+     *
+     * @param sucursal Sucursal a vincular.
+     */
+    public void setSucursal(SucursalModel sucursal) {
+        this.sucursal = sucursal;
     }
 }

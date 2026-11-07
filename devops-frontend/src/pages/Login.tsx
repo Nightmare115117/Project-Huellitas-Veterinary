@@ -20,6 +20,7 @@ const rutaPorRol: Record<Rol, string> = {
   [Rol.Administrador]: '/MainMenuAdministrador',
   [Rol.Dueno]: '/MainMenu/',
   [Rol.Gestor]: '/MainMenuGestor',
+  [Rol.Veterinario]: '/MainMenuVeterinario',
 }
 
 const ENTRADA = '.login__brand .brand, .login__hero > *, .login-card'

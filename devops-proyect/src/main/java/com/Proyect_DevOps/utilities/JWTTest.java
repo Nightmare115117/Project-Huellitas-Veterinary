@@ -13,17 +13,29 @@ import io.github.cdimascio.dotenv.DotenvException;
 public class JWTTest {
 
     /**
-     * Recupera la clave JWT_SECRET del entorno o archivo .env.
+     * Recupera la clave JWT_SECRET del entorno, archivo .env o propiedades de sistema.
      *
      * @return Cadena con la clave secreta configurada.
      */
     private static String obtenerKey() {
         try {
-            Dotenv dotenv = Dotenv.load();
-            return dotenv.get("JWT_SECRET");
-        } catch (DotenvException e) {
-            return System.getenv("JWT_SECRET");
+            Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
+            String val = dotenv.get("JWT_SECRET");
+            if (val != null && !val.isBlank()) {
+                return val;
+            }
+        } catch (Throwable e) {
+            // ignore
         }
+        String env = System.getenv("JWT_SECRET");
+        if (env != null && !env.isBlank()) {
+            return env;
+        }
+        String prop = System.getProperty("JWT_SECRET");
+        if (prop != null && !prop.isBlank()) {
+            return prop;
+        }
+        return null;
     }
 
     /**

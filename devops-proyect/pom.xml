@@ -93,6 +93,12 @@
 			<version>1.5.0</version>
 		</dependency>
 
+		<dependency>
+			<groupId>org.bouncycastle</groupId>
+			<artifactId>bcprov-jdk18on</artifactId>
+			<version>1.78.1</version>
+		</dependency>
+
 	</dependencies>
 
 	<build>
@@ -100,6 +106,17 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<environmentVariables>
+						<HMAC_SECRET>0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef</HMAC_SECRET>
+						<AES_SECRET>0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef</AES_SECRET>
+						<JWT_SECRET>0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef</JWT_SECRET>
+					</environmentVariables>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>
