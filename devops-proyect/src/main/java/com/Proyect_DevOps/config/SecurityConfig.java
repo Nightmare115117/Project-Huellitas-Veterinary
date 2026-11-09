@@ -161,12 +161,14 @@ public class SecurityConfig {
             .requestMatchers("/gestor", "/gestor/**")
             .access(new WebExpressionAuthorizationManager(
                 "hasAuthority('TOKEN_access') and " +
-                    "(hasAuthority('GESTOR') or hasAuthority('Gestor'))"))
+                    "((hasAuthority('GESTOR') or hasAuthority('Gestor')) or" +
+                    "(hasAuthority('Admin') or hasAuthority('Administrador')"))
 
             .requestMatchers("/veterinario", "/veterinario/**")
             .access(new WebExpressionAuthorizationManager(
                 "hasAuthority('TOKEN_access') and " +
-                    "(hasAuthority('VETERINARIO') or hasAuthority('Veterinario'))"))
+                    "((hasAuthority('VETERINARIO') or hasAuthority('Veterinario')) or" +
+                    "(hasAuthority('Admin') or hasAuthority('Administrador')))"))
 
             .requestMatchers("/usuario/mfa/verify")
             .hasAuthority("TOKEN_mfa")
@@ -177,10 +179,8 @@ public class SecurityConfig {
             .requestMatchers("/usuario", "/usuario/**")
             .access(new WebExpressionAuthorizationManager(
                 "hasAuthority('TOKEN_access') and " +
-                    "(hasAuthority('Admin') or hasAuthority('Administrador'))"))
+                    "(hasAuthority('Admin') or hasAuthority('Administrador')))"))
 
-            // Admin can modify any resource
-            .requestMatchers("/**").hasAuthority("Admin")
             .anyRequest()
             .hasAuthority("TOKEN_access"));
 
