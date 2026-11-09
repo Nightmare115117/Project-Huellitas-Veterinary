@@ -162,13 +162,13 @@ public class SecurityConfig {
             .access(new WebExpressionAuthorizationManager(
                 "hasAuthority('TOKEN_access') and " +
                     "(hasAuthority('GESTOR') or hasAuthority('Gestor') or " +
-                    "(hasAuthority('Admin') or hasAuthority('Administrador'))"))
+                    "hasAuthority('Admin') or hasAuthority('Administrador'))"))
 
             .requestMatchers("/veterinario", "/veterinario/**")
             .access(new WebExpressionAuthorizationManager(
                 "hasAuthority('TOKEN_access') and " +
                     "(hasAuthority('VETERINARIO') or hasAuthority('Veterinario') or " +
-                    "(hasAuthority('Admin') or hasAuthority('Administrador'))"))
+                    "hasAuthority('Admin') or hasAuthority('Administrador'))"))
 
             .requestMatchers("/usuario/mfa/verify")
             .hasAuthority("TOKEN_mfa")
