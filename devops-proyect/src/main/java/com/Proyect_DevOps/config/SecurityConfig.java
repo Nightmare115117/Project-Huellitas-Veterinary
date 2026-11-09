@@ -179,7 +179,7 @@ public class SecurityConfig {
             .requestMatchers("/usuario", "/usuario/**")
             .access(new WebExpressionAuthorizationManager(
                 "hasAuthority('TOKEN_access') and " +
-                    "(hasAuthority('Admin') or hasAuthority('Administrador')))"))
+                    "(hasAuthority('Admin') or hasAuthority('Administrador'))"))
 
             .anyRequest()
             .hasAuthority("TOKEN_access"));
