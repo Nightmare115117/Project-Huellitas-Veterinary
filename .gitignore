@@ -35,6 +35,13 @@ devops-proyect/*.njsproj
 devops-proyect/*.sln
 devops-proyect/*.sw?
 devops-proyect/src/main/resources/application.properties
+devops-proyect/.classpath
+devops-proyect/.factorypath
+devops-proyect/.project
+devops-proyect/.settings/org.eclipse.core.resources.prefs
+devops-proyect/.settings/org.eclipse.jdt.apt.core.prefs
+devops-proyect/.settings/org.eclipse.jdt.core.prefs
+devops-proyect/.settings/org.eclipse.m2e.core.prefs
 
 devops-database
 devops-database/Dockerfile
