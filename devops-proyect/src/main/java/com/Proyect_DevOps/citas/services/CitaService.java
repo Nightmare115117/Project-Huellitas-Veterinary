@@ -3,6 +3,7 @@ package com.Proyect_DevOps.citas.services;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.time.LocalDateTime;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -139,12 +140,26 @@ public class CitaService extends GenericServiceImpl<CitaModel, Integer, CitaRepo
      * @throws ResponseStatusException Si el usuario o la mascota no existen en el sistema.
      */
     public CitaDTO createCita(CitaDTO citaDTO){
+        if (citaDTO.correoCliente() == null || citaDTO.correoCliente().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Correo del cliente requerido");
+        }
+        if (citaDTO.fecha() == null || citaDTO.entradaAgendada() == null
+                || !LocalDateTime.of(citaDTO.fecha(), citaDTO.entradaAgendada()).isAfter(LocalDateTime.now())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La cita debe tener una fecha y hora futuras");
+        }
+        if (citaDTO.estadoCita() != 1) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Una cita nueva debe iniciar en estado programado");
+        }
         Optional<UsuarioModel> usuarioOpt = usuarioRepository.findByCorreoHMAC(HMACUtil.GenerarHuella(citaDTO.correoCliente()));
         if (usuarioOpt.isPresent()) {
             UsuarioModel usuario = usuarioOpt.get();
             Optional<MascotaModel> mascotaOpt = mascotaRepository.findById(citaDTO.idMascota());
             if (mascotaOpt.isPresent()) {
                 MascotaModel mascota = mascotaOpt.get();
+                if (mascota.getUsuario() == null
+                        || mascota.getUsuario().getIdUsuario() != usuario.getIdUsuario()) {
+                    throw new ResponseStatusException(HttpStatus.FORBIDDEN, "La mascota no pertenece al cliente");
+                }
                 CitaModel cita = new CitaModel(mascota, usuario, citaDTO.fecha(), citaDTO.entradaAgendada(), citaDTO.estadoCita());
                 repository.save(cita);
                 return convertirADTO(cita);
@@ -157,20 +172,30 @@ public class CitaService extends GenericServiceImpl<CitaModel, Integer, CitaRepo
     }
 
     /**
-     * Cancela una cita médica actualizando su estado a cancelada (código 3).
+     * Cancela una cita médica si pertenece al solicitante o si este tiene acceso privilegiado.
      *
      * @param idCita Identificador de la cita médica a cancelar.
-     * @return {@code true} si la cita fue cancelada exitosamente; {@code false} en caso de error.
-     * @throws RuntimeException Si el ID de la cita no existe.
+     * @return {@code true} si la cita fue cancelada exitosamente.
+     * @param correoSolicitante Correo del usuario que solicita la cancelación.
+     * @param accesoPrivilegiado {@code true} si el usuario puede administrar citas ajenas.
+     * @throws ResponseStatusException Si la cita no existe o el usuario no tiene acceso.
      */
-    public boolean cancelarCita (int idCita) {
-        CitaModel cita = repository.findById(idCita).orElseThrow(()-> new RuntimeException("El id de la cita no fue encontrado: " + idCita));
-        try {
-            cita.setEstadoCita(3);
-            repository.save(cita);
-            return true;
-        } catch (Exception e) {
-            return false;
+    public boolean cancelarCita(int idCita, String correoSolicitante, boolean accesoPrivilegiado) {
+        CitaModel cita = repository.findById(idCita)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cita no encontrada"));
+
+        if (!accesoPrivilegiado) {
+            UsuarioModel solicitante = usuarioRepository
+                .findByCorreoHMAC(HMACUtil.GenerarHuella(correoSolicitante))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
+            if (cita.getUsuarioMascota() == null
+                    || cita.getUsuarioMascota().getIdUsuario() != solicitante.getIdUsuario()) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No autorizado para cancelar esta cita");
+            }
         }
+
+        cita.setEstadoCita(3);
+        repository.save(cita);
+        return true;
     }
 }

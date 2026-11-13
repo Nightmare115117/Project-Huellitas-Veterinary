@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -68,17 +69,26 @@ public class BitacoraInterceptorTest {
     }
 
     @Test
-    void testIgnoraGetYOptions() {
+    void testRegistraGetYOmiteOptions() {
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/mascota");
         MockHttpServletResponse response = new MockHttpServletResponse();
+        response.setStatus(200);
         interceptor.afterCompletion(request, response, new Object(), null);
 
-        verify(bitacoraService, never()).registrarAccion(anyString(), anyString(), anyString(), anyString(), anyString(), anyString());
+        verify(bitacoraService).registrarAccion(
+                eq("Anónimo"),
+                eq("Desconocido"),
+                eq("CONSULTAR_MASCOTA"),
+                eq("Mascotas"),
+                eq("Método: GET | Ruta: /mascota | Resultado: exitoso"),
+                eq("127.0.0.1")
+        );
 
         request = new MockHttpServletRequest("OPTIONS", "/cita");
         interceptor.afterCompletion(request, response, new Object(), null);
 
-        verify(bitacoraService, never()).registrarAccion(anyString(), anyString(), anyString(), anyString(), anyString(), anyString());
+        verify(bitacoraService, times(1)).registrarAccion(
+                anyString(), anyString(), anyString(), anyString(), anyString(), anyString());
     }
 
     @Test

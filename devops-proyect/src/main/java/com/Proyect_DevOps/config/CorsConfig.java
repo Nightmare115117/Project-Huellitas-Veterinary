@@ -1,5 +1,9 @@
 package com.Proyect_DevOps.config;
 
+import java.util.Arrays;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.lang.NonNull;
@@ -20,18 +24,23 @@ public class CorsConfig {
     /**
      * Define y registra el bean de configuración CORS para toda la aplicación Web MVC.
      *
-     * @return Configuración de {@link WebMvcConfigurer} con las políticas de origen, métodos y credenciales.
+     * @return Configuración CORS con lista explícita de orígenes, métodos y cabeceras permitidos.
      */
     @Bean
-    public WebMvcConfigurer corsConfigurer() {
+    public WebMvcConfigurer corsConfigurer(
+            @Value("${app.cors.allowed-origins:http://localhost:5173,http://127.0.0.1:5173}") String allowedOrigins) {
+        List<String> origins = Arrays.stream(allowedOrigins.split(","))
+                .map(String::trim)
+                .filter(origin -> !origin.isEmpty())
+                .toList();
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(@NonNull CorsRegistry registry) {
                 registry.addMapping("/**")
-                        .allowedOriginPatterns("*")   // Permite cualquier origen
+                        .allowedOrigins(origins.toArray(String[]::new))
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
-                        .allowCredentials(true);      // Permite el envío de cookies y tokens de autenticación
+                        .allowCredentials(true);
             }
         };
     }

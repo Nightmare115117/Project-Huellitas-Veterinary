@@ -32,10 +32,9 @@ public class BitacoraInterceptor implements HandlerInterceptor {
     private static final Logger log = LoggerFactory.getLogger(BitacoraInterceptor.class);
 
     /**
-     * Bandera para habilitar o deshabilitar el registro de peticiones de solo lectura (GET).
-     * Por defecto se omiten para evitar saturar el almacenamiento de auditoría con tráfico rutinario.
+     * Registra las consultas de lectura para mantener trazabilidad de accesos a datos.
      */
-    private static final boolean REGISTRAR_CONSULTAS_GET = false;
+    private static final boolean REGISTRAR_CONSULTAS_GET = true;
 
     /**
      * Servicio de bitácora inyectado para la persistencia de eventos.

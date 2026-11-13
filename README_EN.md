@@ -32,6 +32,7 @@
   - [3. Web Frontend (React + Vite)](#3-web-frontend-react--vite)
   - [4. Mobile Application (Android)](#4-mobile-application-android)
   - [5. Automated Setup with Scripts](#5-automated-setup-with-scripts)
+  - [6. Kubernetes Deployment with HTTPS](#6-kubernetes-deployment-with-https)
 
 ---
 
@@ -86,7 +87,7 @@ Project-Huellitas-Veterinary/
 | **Database** | MariaDB / MySQL | Relational data persistence with MariaDB dialect. |
 | **Web Frontend** | React 18/19, TypeScript, Vite, Lucide Icons | Responsive, accessible, and reactive single-page interface. |
 | **Android Mobile** | Kotlin, Jetpack Compose, Material 3 | Native application with role-tailored navigation. |
-| **Security** | Spring Security, OAuth2 Resource Server, Nimbus JWT, BCrypt, AES-GCM | Protected endpoints, stateless token authentication, and symmetric encryption. |
+| **Security** | Spring Security, OAuth2 Resource Server, Nimbus JWT, Argon2id, AES-GCM, Cloudflare Turnstile | Protected endpoints, stateless authentication, password hashing, CAPTCHA, and symmetric encryption. |
 | **Testing** | JUnit Jupiter, Mockito, Spring Boot Test | Unit testing for interceptors, services, and controllers. |
 
 ---
@@ -100,7 +101,10 @@ The application enforces robust security standards:
 3. **Role-Based Access Control (RBAC):** Configured in `SecurityConfig`:
    - Endpoint `/bitacora/**` is restricted strictly to `Admin` and `Administrador` authorities.
    - User administration endpoints are secured against unauthorized access.
-4. **Password Security:** Salted password hashing powered by `BCryptPasswordEncoder(12)`.
+   - Generic CRUD operations are restricted to authorized staff; personal pet, appointment, treatment, and name lookups are limited to the owner or authorized staff.
+4. **HTTPS Transport:** TLS and security headers are managed by the external reverse proxy; the backend remains an internal cluster service.
+5. **Password Security:** Salted Argon2id hashing; new passwords require at least 12 characters with uppercase, lowercase, a number, and a symbol. Existing BCrypt hashes are migrated at login.
+6. **Anti-bot protection:** Cloudflare Turnstile is verified by the backend before credential lookup. The API checks success, the configured hostname, and the `login` action; CAPTCHA is mandatory in production and fails closed if Cloudflare is unavailable.
 
 ---
 
@@ -156,6 +160,12 @@ Create a `.env` file in the root directory of `devops-proyect/` (or configure th
 JWT_SECRET=your_64_character_hex_secret_key_for_signing_jwt_tokens_here
 AES_SECRET=your_64_character_hex_secret_key_for_aes_gcm_encryption_here
 HMAC_SECRET=your_64_character_hex_secret_key_for_hmac_validation_here
+SPRING_DATASOURCE_USERNAME=huellitas_app
+SPRING_DATASOURCE_PASSWORD=use_a_long_unique_password
+# Only required when Turnstile is enabled in the backend
+TURNSTILE_ENABLED=true
+TURNSTILE_SECRET=private_cloudflare_secret
+TURNSTILE_EXPECTED_HOSTNAME=your-public-domain
 ```
 
 > **Tip:** You can generate secure 64-character hex keys using OpenSSL:
@@ -169,14 +179,18 @@ HMAC_SECRET=your_64_character_hex_secret_key_for_hmac_validation_here
 
 ### 1. Database Setup (MariaDB)
 
-Create the database and database user configured in `application.properties`:
+Create the database and a dedicated application user with a strong password. Do not use default credentials or commit these credentials:
 
 ```sql
 CREATE DATABASE IF NOT EXISTS huellitas_db;
-CREATE USER IF NOT EXISTS 'Admin'@'localhost' IDENTIFIED BY 'a123b123';
-GRANT ALL PRIVILEGES ON huellitas_db.* TO 'Admin'@'localhost';
+CREATE USER IF NOT EXISTS 'huellitas_app'@'localhost' IDENTIFIED BY '<generated-strong-password>';
+GRANT SELECT, INSERT, UPDATE, DELETE ON huellitas_db.* TO 'huellitas_app'@'localhost';
 FLUSH PRIVILEGES;
 ```
+
+`SPRING_DATASOURCE_USERNAME` and `SPRING_DATASOURCE_PASSWORD` are required; the application does not ship with default database credentials. `APP_CORS_ALLOWED_ORIGINS` configures development origins; in production, the frontend and API are served from the same origin through the reverse proxy.
+
+Register the public domain with Cloudflare Turnstile. Set the **site key** as `VITE_TURNSTILE_SITE_KEY` when building the frontend (for example in a local, untracked `.env` file) and keep the **secret key** only in the backend environment. In Kubernetes, add `TURNSTILE_SECRET` to the `huellitas-secrets` Secret; the deployment expects `TURNSTILE_EXPECTED_HOSTNAME` to match the registered hostname.
 
 ---
 
@@ -205,6 +219,9 @@ cd devops-frontend
 
 # Install dependencies
 npm install
+
+# Expose the Turnstile site key to Vite
+export VITE_TURNSTILE_SITE_KEY=your-public-cloudflare-site-key
 
 # Start development server (port 5173 by default)
 npm run dev
@@ -249,6 +266,12 @@ pkill -f "spring-boot" 2>/dev/null
 pkill -f "node" 2>/dev/null
 pkill -f "npm" 2>/dev/null
 ```
+
+---
+
+### 6. Kubernetes Deployment Behind a Reverse Proxy
+
+The external reverse proxy terminates TLS and adds the security headers. The cluster frontend listens on HTTP at NodePort `30081`; configure the proxy to forward site requests there. The backend remains an internal cluster service and API requests reach it through the frontend. Before deployment, configure the GitHub Actions repository variable `VITE_TURNSTILE_SITE_KEY` and add `TURNSTILE_SECRET` to the `huellitas-secrets` Secret. The hostname configured in `K8s/backend-deployment.yml` must match the one registered with Turnstile.
 
 ---
 

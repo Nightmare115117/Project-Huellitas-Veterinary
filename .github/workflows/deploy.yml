@@ -33,12 +33,23 @@ jobs:
       - name: Configurar Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Verificar clave pública de Turnstile
+        env:
+          TURNSTILE_SITE_KEY: ${{ vars.VITE_TURNSTILE_SITE_KEY }}
+        run: |
+          if [ -z "$TURNSTILE_SITE_KEY" ]; then
+            echo "::error::Configura la variable de repositorio VITE_TURNSTILE_SITE_KEY."
+            exit 1
+          fi
+
       - name: Build y Push Frontend
         uses: docker/build-push-action@v6
         with:
           context: ./devops-frontend
           push: true
           tags: ghcr.io/${{ env.OWNER_LC }}/devops-frontend:latest
+          build-args: |
+            VITE_TURNSTILE_SITE_KEY=${{ vars.VITE_TURNSTILE_SITE_KEY }}
           cache-from: type=gha,scope=frontend
           cache-to: type=gha,mode=max,scope=frontend
 
