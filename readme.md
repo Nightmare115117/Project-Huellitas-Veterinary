@@ -103,7 +103,7 @@ El sistema implementa medidas de seguridad sólidas:
    - Operaciones CRUD genéricas restringidas a administradores y personal autorizado; las consultas de mascotas, citas, tratamientos y nombres por correo solo permiten al propietario o al personal autorizado.
 4. **Transporte HTTPS:** TLS y las cabeceras de seguridad se gestionan en el proxy inverso externo; el backend permanece como servicio interno del clúster.
 5. **Protección de Contraseñas:** Hash Argon2id con salt aleatorio; las claves nuevas requieren 12 caracteres, mayúscula, minúscula, número y símbolo. Los hashes BCrypt existentes se migran progresivamente en el inicio de sesión.
-6. **Protección anti-bots:** Cloudflare Turnstile se valida en el backend antes de consultar credenciales. La API comprueba el éxito, el hostname configurado y la acción `login`; en producción el CAPTCHA es obligatorio y falla de forma cerrada si Cloudflare no responde.
+6. **Protección anti-bots:** Cloudflare Turnstile se valida en el backend antes de consultar credenciales. La API comprueba el éxito, un hostname de la lista permitida y la acción `login`; en producción el CAPTCHA es obligatorio y falla de forma cerrada si Cloudflare no responde.
 
 ---
 
@@ -164,7 +164,7 @@ SPRING_DATASOURCE_PASSWORD=usa_una_contrasena_larga_y_unica
 # Solo necesario cuando se habilita Turnstile en el backend
 TURNSTILE_ENABLED=true
 TURNSTILE_SECRET=secreto_privado_de_cloudflare
-TURNSTILE_EXPECTED_HOSTNAME=tu-dominio-publico
+TURNSTILE_EXPECTED_HOSTNAMES=app.example.com,dev-server.tail223158.ts.net
 ```
 
 > **Tip:** Puedes generar claves válidas desde la terminal con OpenSSL:
@@ -189,7 +189,7 @@ FLUSH PRIVILEGES;
 
 `SPRING_DATASOURCE_USERNAME` y `SPRING_DATASOURCE_PASSWORD` son obligatorias; la aplicación no incluye credenciales por defecto. `APP_CORS_ALLOWED_ORIGINS` permite configurar los orígenes para desarrollo; en producción, el frontend y la API se sirven desde el mismo origen a través del proxy inverso.
 
-Registra el dominio público en Cloudflare Turnstile. Configura la **clave del sitio** como `VITE_TURNSTILE_SITE_KEY` al construir el frontend (por ejemplo, en un archivo `.env` local, no versionado) y guarda la **clave secreta** únicamente en el entorno del backend. En Kubernetes, añade `TURNSTILE_SECRET` al Secret `huellitas-secrets`; el deployment espera que `TURNSTILE_EXPECTED_HOSTNAME` coincida con el hostname registrado.
+Registra todos los hostnames desde los que se servirá el login en la configuración del widget de Cloudflare Turnstile. Configura la **clave del sitio** como `VITE_TURNSTILE_SITE_KEY` al construir el frontend (por ejemplo, en un archivo `.env` local, no versionado) y guarda la **clave secreta** únicamente en el entorno del backend. En Kubernetes, añade `TURNSTILE_SECRET` y `TURNSTILE_EXPECTED_HOSTNAMES` al Secret `huellitas-secrets`; esta última es una lista separada por comas que debe coincidir con los hostnames registrados. En desarrollo local el widget es opcional; en el build de producción es obligatorio.
 
 ---
 
@@ -270,7 +270,7 @@ pkill -f "npm" 2>/dev/null
 
 ### 6. Despliegue en Kubernetes detrás de un proxy inverso
 
-El proxy inverso externo termina TLS y agrega las cabeceras de seguridad. El frontend del clúster escucha HTTP en el NodePort `30081`; configura el proxy para enviarle allí las solicitudes del sitio. El backend permanece como servicio interno y recibe las llamadas API mediante el frontend. Antes de desplegar, configura la variable de repositorio de GitHub Actions `VITE_TURNSTILE_SITE_KEY` y agrega `TURNSTILE_SECRET` al Secret `huellitas-secrets`. El hostname configurado en `K8s/backend-deployment.yml` debe ser el mismo registrado en Turnstile.
+El proxy inverso externo termina TLS y agrega las cabeceras de seguridad. El frontend del clúster escucha HTTP en el NodePort `30081`; configura el proxy para enviarle allí las solicitudes del sitio. El backend permanece como servicio interno y recibe las llamadas API mediante el frontend. Antes de desplegar, configura la variable de repositorio de GitHub Actions `VITE_TURNSTILE_SITE_KEY` y agrega `TURNSTILE_SECRET` y `TURNSTILE_EXPECTED_HOSTNAMES` al Secret `huellitas-secrets`. Esta lista debe contener todos y solo los hostnames registrados en Turnstile, separados por comas y sin protocolo ni rutas.
 
 ---
 

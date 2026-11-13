@@ -78,8 +78,8 @@ spec:
                   name: huellitas-secrets
                   key: TURNSTILE_SECRET
 
-            - name: TURNSTILE_EXPECTED_HOSTNAME
-              value: dev-server.tail223158.ts.net
+            - name: TURNSTILE_EXPECTED_HOSTNAMES
+              value: dev-server.tail223158.ts.net,derivevaultraider115.studio
 ---
 apiVersion: v1
 kind: Service

@@ -104,7 +104,7 @@ The application enforces robust security standards:
    - Generic CRUD operations are restricted to authorized staff; personal pet, appointment, treatment, and name lookups are limited to the owner or authorized staff.
 4. **HTTPS Transport:** TLS and security headers are managed by the external reverse proxy; the backend remains an internal cluster service.
 5. **Password Security:** Salted Argon2id hashing; new passwords require at least 12 characters with uppercase, lowercase, a number, and a symbol. Existing BCrypt hashes are migrated at login.
-6. **Anti-bot protection:** Cloudflare Turnstile is verified by the backend before credential lookup. The API checks success, the configured hostname, and the `login` action; CAPTCHA is mandatory in production and fails closed if Cloudflare is unavailable.
+6. **Anti-bot protection:** Cloudflare Turnstile is verified by the backend before credential lookup. The API checks success, an allowed hostname, and the `login` action; CAPTCHA is mandatory in production and fails closed if Cloudflare is unavailable.
 
 ---
 
@@ -165,7 +165,7 @@ SPRING_DATASOURCE_PASSWORD=use_a_long_unique_password
 # Only required when Turnstile is enabled in the backend
 TURNSTILE_ENABLED=true
 TURNSTILE_SECRET=private_cloudflare_secret
-TURNSTILE_EXPECTED_HOSTNAME=your-public-domain
+TURNSTILE_EXPECTED_HOSTNAMES=app.example.com,dev-server.tail223158.ts.net
 ```
 
 > **Tip:** You can generate secure 64-character hex keys using OpenSSL:
@@ -190,7 +190,7 @@ FLUSH PRIVILEGES;
 
 `SPRING_DATASOURCE_USERNAME` and `SPRING_DATASOURCE_PASSWORD` are required; the application does not ship with default database credentials. `APP_CORS_ALLOWED_ORIGINS` configures development origins; in production, the frontend and API are served from the same origin through the reverse proxy.
 
-Register the public domain with Cloudflare Turnstile. Set the **site key** as `VITE_TURNSTILE_SITE_KEY` when building the frontend (for example in a local, untracked `.env` file) and keep the **secret key** only in the backend environment. In Kubernetes, add `TURNSTILE_SECRET` to the `huellitas-secrets` Secret; the deployment expects `TURNSTILE_EXPECTED_HOSTNAME` to match the registered hostname.
+Register all hostnames that will serve the login page in the Cloudflare Turnstile widget settings. Set the **site key** as `VITE_TURNSTILE_SITE_KEY` when building the frontend (for example in a local, untracked `.env` file) and keep the **secret key** only in the backend environment. In Kubernetes, add `TURNSTILE_SECRET` and `TURNSTILE_EXPECTED_HOSTNAMES` to the `huellitas-secrets` Secret; the latter is a comma-separated list that must match the registered hostnames. The widget is optional in local development and mandatory in production builds.
 
 ---
 
@@ -271,7 +271,7 @@ pkill -f "npm" 2>/dev/null
 
 ### 6. Kubernetes Deployment Behind a Reverse Proxy
 
-The external reverse proxy terminates TLS and adds the security headers. The cluster frontend listens on HTTP at NodePort `30081`; configure the proxy to forward site requests there. The backend remains an internal cluster service and API requests reach it through the frontend. Before deployment, configure the GitHub Actions repository variable `VITE_TURNSTILE_SITE_KEY` and add `TURNSTILE_SECRET` to the `huellitas-secrets` Secret. The hostname configured in `K8s/backend-deployment.yml` must match the one registered with Turnstile.
+The external reverse proxy terminates TLS and adds the security headers. The cluster frontend listens on HTTP at NodePort `30081`; configure the proxy to forward site requests there. The backend remains an internal cluster service and API requests reach it through the frontend. Before deployment, configure the GitHub Actions repository variable `VITE_TURNSTILE_SITE_KEY` and add `TURNSTILE_SECRET` and `TURNSTILE_EXPECTED_HOSTNAMES` to the `huellitas-secrets` Secret. This list must contain all and only the hostnames registered with Turnstile, comma-separated without protocol or paths.
 
 ---
 

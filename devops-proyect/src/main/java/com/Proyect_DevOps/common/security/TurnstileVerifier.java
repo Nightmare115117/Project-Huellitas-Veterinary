@@ -1,6 +1,10 @@
 package com.Proyect_DevOps.common.security;
 
 import java.time.Duration;
+import java.util.Arrays;
+import java.util.Locale;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.springframework.util.StringUtils;
@@ -25,20 +29,24 @@ public class TurnstileVerifier {
 
     private final boolean enabled;
     private final String secret;
-    private final String expectedHostname;
+    private final Set<String> expectedHostnames;
     private final RestTemplate restTemplate;
 
     public TurnstileVerifier(
             RestTemplateBuilder restTemplateBuilder,
             @Value("${app.security.turnstile.enabled:false}") boolean enabled,
             @Value("${app.security.turnstile.secret:}") String secret,
-            @Value("${app.security.turnstile.expected-hostname:}") String expectedHostname) {
+            @Value("${app.security.turnstile.expected-hostnames:}") String expectedHostnames) {
         this.enabled = enabled;
         this.secret = secret;
-        this.expectedHostname = expectedHostname;
-        if (enabled && (!StringUtils.hasText(secret) || !StringUtils.hasText(expectedHostname))) {
+        this.expectedHostnames = Arrays.stream(expectedHostnames.split(","))
+                .map(String::trim)
+                .filter(StringUtils::hasText)
+                .map(hostname -> hostname.toLowerCase(Locale.ROOT))
+                .collect(Collectors.toUnmodifiableSet());
+        if (enabled && (!StringUtils.hasText(secret) || this.expectedHostnames.isEmpty())) {
             throw new IllegalStateException(
-                    "TURNSTILE_SECRET y TURNSTILE_EXPECTED_HOSTNAME son obligatorios cuando Turnstile está habilitado");
+                    "TURNSTILE_SECRET y TURNSTILE_EXPECTED_HOSTNAMES son obligatorios cuando Turnstile está habilitado");
         }
         this.restTemplate = restTemplateBuilder
                 .setConnectTimeout(Duration.ofSeconds(2))
@@ -67,7 +75,8 @@ public class TurnstileVerifier {
                     SiteverifyResponse.class);
             return response != null
                     && response.success()
-                    && expectedHostname.equalsIgnoreCase(response.hostname())
+                    && response.hostname() != null
+                    && expectedHostnames.contains(response.hostname().toLowerCase(Locale.ROOT))
                     && "login".equals(response.action());
         } catch (RestClientException exception) {
             log.warn("No se pudo verificar el token de Turnstile: {}", exception.getClass().getSimpleName());
