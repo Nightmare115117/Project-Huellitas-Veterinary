@@ -14,7 +14,7 @@ import jakarta.persistence.Table;
 /**
  * Entidad JPA que representa a un usuario del sistema (personal médico, administrativo o cliente).
  * Implementa cifrado en reposo para el correo electrónico (AES-256), una huella de búsqueda (HMAC-SHA256)
- * y almacenamiento de contraseñas con hash criptográfico BCrypt.
+ * y almacenamiento de contraseñas con hash Argon2id (con lectura de hashes BCrypt heredados).
  *
  * @author Equipo DevOps Huellitas
  * @version 1.0
@@ -70,7 +70,7 @@ public class UsuarioModel {
     private String secretoPendienteMFA;
 
     /**
-     * Contraseña protegida mediante algoritmo de derivación de claves BCrypt.
+     * Contraseña protegida mediante algoritmo de derivación de claves Argon2id.
      */
     @Column(nullable = false)
     private String contraseña;
@@ -223,7 +223,7 @@ public class UsuarioModel {
     }
 
     /**
-     * Obtiene el hash BCrypt de la contraseña del usuario.
+     * Obtiene el hash criptográfico de la contraseña del usuario.
      *
      * @return Hash de la contraseña.
      */

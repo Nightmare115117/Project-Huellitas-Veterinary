@@ -10,10 +10,12 @@ import { apiGet, apiPost } from '../lib/api'
 import { prefersReducedMotion } from '../lib/motion'
 import { setCorreo } from '../lib/session'
 import { Rol, type LoginResponse, type MfaVerifyResponse } from '../types/api'
+import TurnstileWidget from '../components/TurnstileWidget'
 
 interface LoginBody {
   correo: string
   contrasena: string // sin ñ: así lo espera el backend
+  captchaToken: string
 }
 
 const rutaPorRol: Record<Rol, string> = {
@@ -36,6 +38,8 @@ export default function Login() {
   const [enviando, setEnviando] = useState(false)
   const [temToken, setTemToken] = useState('') // != '' → paso de código MFA
   const [codigo, setCodigo] = useState('')
+  const [captchaToken, setCaptchaToken] = useState('')
+  const [captchaGeneration, setCaptchaGeneration] = useState(0)
   const navigate = useNavigate()
 
   useSeasonalMusic()
@@ -66,6 +70,10 @@ export default function Login() {
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    if (!temToken && !captchaToken) {
+      void alerts.error('Completa la verificación CAPTCHA antes de continuar.')
+      return
+    }
     setEnviando(true)
 
     try {
@@ -83,6 +91,7 @@ export default function Login() {
       const data = await apiPost<LoginBody, LoginResponse>('/usuario/login', {
         correo: user,
         contrasena,
+        captchaToken,
       })
 
       if (data.mfaneed && data.temToken) {
@@ -91,6 +100,8 @@ export default function Login() {
       }
 
       if (data.login !== true || !data.token) {
+        setCaptchaToken('')
+        setCaptchaGeneration((generation) => generation + 1)
         sacudir()
         void alerts.loginError()
         return
@@ -105,6 +116,8 @@ export default function Login() {
         sacudir()
         void alerts.error('Código incorrecto o expirado. Si pasaron más de 5 minutos, vuelve a iniciar sesión.')
       } else {
+        setCaptchaToken('')
+        setCaptchaGeneration((generation) => generation + 1)
         sacudir()
         void alerts.loginError()
       }
@@ -116,6 +129,8 @@ export default function Login() {
   const volver = () => {
     setTemToken('')
     setCodigo('')
+    setCaptchaToken('')
+    setCaptchaGeneration((generation) => generation + 1)
     sessionStorage.removeItem('token')
   }
 
@@ -190,12 +205,12 @@ export default function Login() {
                 id="contrasena"
                 type={mostrar ? 'text' : 'password'}
                 autoComplete="current-password"
-                placeholder="8 a 16 caracteres"
+                placeholder="8 a 128 caracteres"
                 value={contrasena}
                 onChange={(e) => setContrasena(e.target.value)}
                 required
                 minLength={8}
-                maxLength={16}
+                maxLength={128}
               />
               <button
                 type="button"
@@ -209,10 +224,16 @@ export default function Login() {
             </div>
           </div>
 
+          <TurnstileWidget key={captchaGeneration} onTokenChange={setCaptchaToken} />
+
             </>
           )}
 
-          <button type="submit" className="btn btn--primary btn--block" disabled={enviando}>
+          <button
+            type="submit"
+            className="btn btn--primary btn--block"
+            disabled={enviando || (!temToken && !captchaToken)}
+          >
             {enviando ? (
               <>
                 <span className="spinner spinner--sm" aria-hidden /> Entrando…

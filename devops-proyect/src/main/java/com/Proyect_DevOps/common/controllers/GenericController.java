@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -38,6 +39,7 @@ public abstract class GenericController<T, ID, S extends GenericService<T, ID>> 
      * @return {@link ResponseEntity} con código 200 (OK) y la lista de entidades en el cuerpo.
      */
     @GetMapping
+    @PreAuthorize("hasAuthority('TOKEN_access') and hasAnyAuthority('Admin', 'Administrador', 'Gestor', 'GESTOR', 'Veterinario', 'VETERINARIO')")
     public ResponseEntity<List<T>> getAll() {
         return ResponseEntity.ok(service.findAll());
     }
@@ -50,6 +52,7 @@ public abstract class GenericController<T, ID, S extends GenericService<T, ID>> 
      *         o código 404 (NOT_FOUND) si no existe.
      */
     @GetMapping("/{id:[0-9]+}")
+    @PreAuthorize("hasAuthority('TOKEN_access') and hasAnyAuthority('Admin', 'Administrador', 'Gestor', 'GESTOR', 'Veterinario', 'VETERINARIO')")
     public ResponseEntity<T> getById(@PathVariable("id") ID id) {
         return service.findById(id)
                 .map(ResponseEntity::ok)
@@ -63,6 +66,7 @@ public abstract class GenericController<T, ID, S extends GenericService<T, ID>> 
      * @return {@link ResponseEntity} con código 201 (CREATED) y la entidad creada.
      */
     @PostMapping
+    @PreAuthorize("hasAuthority('TOKEN_access') and hasAnyAuthority('Admin', 'Administrador', 'Gestor', 'GESTOR', 'Veterinario', 'VETERINARIO')")
     public ResponseEntity<T> create(@RequestBody T entity) {
         T created = service.save(entity);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
@@ -77,6 +81,7 @@ public abstract class GenericController<T, ID, S extends GenericService<T, ID>> 
      *         o código 404 (NOT_FOUND) si no existe.
      */
     @PutMapping("/{id:[0-9]+}")
+    @PreAuthorize("hasAuthority('TOKEN_access') and hasAnyAuthority('Admin', 'Administrador', 'Gestor', 'GESTOR', 'Veterinario', 'VETERINARIO')")
     public ResponseEntity<T> update(@PathVariable("id") ID id, @RequestBody T entity) {
         return service.update(id, entity)
                 .map(ResponseEntity::ok)
@@ -91,6 +96,7 @@ public abstract class GenericController<T, ID, S extends GenericService<T, ID>> 
      *         o código 404 (NOT_FOUND) si no fue encontrada.
      */
     @DeleteMapping("/{id:[0-9]+}")
+    @PreAuthorize("hasAuthority('TOKEN_access') and hasAnyAuthority('Admin', 'Administrador', 'Gestor', 'GESTOR', 'Veterinario', 'VETERINARIO')")
     public ResponseEntity<Void> delete(@PathVariable("id") ID id) {
         if (service.deleteById(id)) {
             return ResponseEntity.noContent().build();

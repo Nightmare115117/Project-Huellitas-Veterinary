@@ -28,11 +28,6 @@ public class HMACUtil {
     private static final String ALGORITHM = "HmacSHA256";
 
     /**
-     * Clave secreta por defecto para entornos CI / test cuando no existe archivo .env.
-     */
-    private static final String DEFAULT_FALLBACK_KEY = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
-
-    /**
      * Clave secreta obtenida desde el entorno.
      */
     private static final String KEY = obtenerClave();
@@ -83,10 +78,6 @@ public class HMACUtil {
     private static String obtenerClave() {
         String key = obtenerKey();
             
-        if (key == null || key.isBlank() || !key.matches("[0-9a-fA-F]{64}")) {
-            return DEFAULT_FALLBACK_KEY;
-        }
-
         return key;   
     }
 
@@ -100,6 +91,9 @@ public class HMACUtil {
      */
     public static String GenerarHuella(String dato) {
         try {
+            if (KEY == null || !KEY.matches("[0-9a-fA-F]{64}")) {
+                throw new IllegalStateException("HMAC_SECRET no está configurado correctamente");
+            }
             byte[] keyHex = HexFormat.of().parseHex(KEY);
             SecretKeySpec key = new SecretKeySpec(keyHex, ALGORITHM);
             Mac mac = Mac.getInstance(ALGORITHM);

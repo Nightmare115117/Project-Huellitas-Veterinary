@@ -32,6 +32,7 @@
   - [3. Frontend Web (React + Vite)](#3-frontend-web-react--vite)
   - [4. Aplicación Móvil (Android)](#4-aplicación-móvil-android)
   - [5. Instalación Automatizada con Scripts](#5-instalación-automatizada-con-scripts)
+  - [6. Despliegue en Kubernetes con HTTPS](#6-despliegue-en-kubernetes-con-https)
 
 ---
 
@@ -85,7 +86,7 @@ Project-Huellitas-Veterinary/
 | **Base de Datos** | MariaDB / MySQL | Almacenamiento relacional con dialecto MariaDB. |
 | **Frontend Web** | React 18/19, TypeScript, Vite, Lucide Icons | Interfaz moderna, reactiva, accesible y responsive. |
 | **Móvil Android** | Kotlin, Jetpack Compose, Material 3 | Aplicación nativa con navegación diferenciada por roles. |
-| **Seguridad** | Spring Security, OAuth2 Resource Server, Nimbus JWT, BCrypt, AES-GCM | Protección de endpoints, tokens stateless y cifrado simétrico. |
+| **Seguridad** | Spring Security, OAuth2 Resource Server, Nimbus JWT, Argon2id, AES-GCM, Cloudflare Turnstile | Protección de endpoints, autenticación sin estado, hashes de contraseñas, CAPTCHA y cifrado simétrico. |
 | **Testing** | JUnit Jupiter, Mockito, Spring Boot Test | Pruebas unitarias de servicios, controladores e interceptores. |
 
 ---
@@ -99,7 +100,10 @@ El sistema implementa medidas de seguridad sólidas:
 3. **Control de Acceso Basado en Roles (RBAC):** Restricciones automáticas en `SecurityConfig`:
    - Endpoint `/bitacora/**` restringido exclusivamente a roles `Admin` y `Administrador`.
    - Endpoints de administración de `/usuario` protegidos.
-4. **Protección de Contraseñas:** Hash con salt seguro utilizando `BCryptPasswordEncoder(12)`.
+   - Operaciones CRUD genéricas restringidas a administradores y personal autorizado; las consultas de mascotas, citas, tratamientos y nombres por correo solo permiten al propietario o al personal autorizado.
+4. **Transporte HTTPS:** TLS y las cabeceras de seguridad se gestionan en el proxy inverso externo; el backend permanece como servicio interno del clúster.
+5. **Protección de Contraseñas:** Hash Argon2id con salt aleatorio; las claves nuevas requieren 12 caracteres, mayúscula, minúscula, número y símbolo. Los hashes BCrypt existentes se migran progresivamente en el inicio de sesión.
+6. **Protección anti-bots:** Cloudflare Turnstile se valida en el backend antes de consultar credenciales. La API comprueba el éxito, el hostname configurado y la acción `login`; en producción el CAPTCHA es obligatorio y falla de forma cerrada si Cloudflare no responde.
 
 ---
 
@@ -155,6 +159,12 @@ Crea un archivo `.env` en la raíz de `devops-proyect/` (o exporta las variables
 JWT_SECRET=tu_clave_secreta_hex_de_64_caracteres_para_firmar_tokens_jwt_aqui
 AES_SECRET=tu_clave_secreta_hex_de_64_caracteres_para_cifrado_aes_gcm_aqui
 HMAC_SECRET=tu_clave_secreta_hex_de_64_caracteres_para_validacion_hmac_aqui
+SPRING_DATASOURCE_USERNAME=huellitas_app
+SPRING_DATASOURCE_PASSWORD=usa_una_contrasena_larga_y_unica
+# Solo necesario cuando se habilita Turnstile en el backend
+TURNSTILE_ENABLED=true
+TURNSTILE_SECRET=secreto_privado_de_cloudflare
+TURNSTILE_EXPECTED_HOSTNAME=tu-dominio-publico
 ```
 
 > **Tip:** Puedes generar claves válidas desde la terminal con OpenSSL:
@@ -168,14 +178,18 @@ HMAC_SECRET=tu_clave_secreta_hex_de_64_caracteres_para_validacion_hmac_aqui
 
 ### 1. Base de Datos (MariaDB)
 
-Crea la base de datos y el usuario configurados en `application.properties`:
+Crea la base de datos y un usuario de aplicación con una contraseña fuerte. No uses credenciales predeterminadas ni publiques estas credenciales:
 
 ```sql
 CREATE DATABASE IF NOT EXISTS huellitas_db;
-CREATE USER IF NOT EXISTS 'Admin'@'localhost' IDENTIFIED BY 'a123b123';
-GRANT ALL PRIVILEGES ON huellitas_db.* TO 'Admin'@'localhost';
+CREATE USER IF NOT EXISTS 'huellitas_app'@'localhost' IDENTIFIED BY '<contraseña-fuerte-generada>';
+GRANT SELECT, INSERT, UPDATE, DELETE ON huellitas_db.* TO 'huellitas_app'@'localhost';
 FLUSH PRIVILEGES;
 ```
+
+`SPRING_DATASOURCE_USERNAME` y `SPRING_DATASOURCE_PASSWORD` son obligatorias; la aplicación no incluye credenciales por defecto. `APP_CORS_ALLOWED_ORIGINS` permite configurar los orígenes para desarrollo; en producción, el frontend y la API se sirven desde el mismo origen a través del proxy inverso.
+
+Registra el dominio público en Cloudflare Turnstile. Configura la **clave del sitio** como `VITE_TURNSTILE_SITE_KEY` al construir el frontend (por ejemplo, en un archivo `.env` local, no versionado) y guarda la **clave secreta** únicamente en el entorno del backend. En Kubernetes, añade `TURNSTILE_SECRET` al Secret `huellitas-secrets`; el deployment espera que `TURNSTILE_EXPECTED_HOSTNAME` coincida con el hostname registrado.
 
 ---
 
@@ -204,6 +218,9 @@ cd devops-frontend
 
 # Instalar dependencias
 npm install
+
+# Publica la clave del sitio de Turnstile al proceso de Vite
+export VITE_TURNSTILE_SITE_KEY=clave-publica-de-cloudflare
 
 # Iniciar servidor de desarrollo (puerto 5173 por defecto)
 npm run dev
@@ -248,6 +265,12 @@ pkill -f "spring-boot" 2>/dev/null
 pkill -f "node" 2>/dev/null
 pkill -f "npm" 2>/dev/null
 ```
+
+---
+
+### 6. Despliegue en Kubernetes detrás de un proxy inverso
+
+El proxy inverso externo termina TLS y agrega las cabeceras de seguridad. El frontend del clúster escucha HTTP en el NodePort `30081`; configura el proxy para enviarle allí las solicitudes del sitio. El backend permanece como servicio interno y recibe las llamadas API mediante el frontend. Antes de desplegar, configura la variable de repositorio de GitHub Actions `VITE_TURNSTILE_SITE_KEY` y agrega `TURNSTILE_SECRET` al Secret `huellitas-secrets`. El hostname configurado en `K8s/backend-deployment.yml` debe ser el mismo registrado en Turnstile.
 
 ---
 

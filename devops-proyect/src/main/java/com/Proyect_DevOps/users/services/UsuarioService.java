@@ -12,6 +12,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.Proyect_DevOps.MFA.MFAService;
+import com.Proyect_DevOps.common.security.PasswordPolicy;
 import com.Proyect_DevOps.common.services.GenericServiceImpl;
 import com.Proyect_DevOps.sucursales.repositories.SucursalRepository;
 import com.Proyect_DevOps.users.models.RolModel;
@@ -93,12 +94,13 @@ public class UsuarioService extends GenericServiceImpl<UsuarioModel, Integer, Us
     /**
      * {@inheritDoc}
      * Valida que el correo no esté previamente registrado, asocia el rol correspondiente,
-     * calcula la huella HMAC, cifra el correo con AES y codifica la contraseña con BCrypt antes de persistir.
+     * calcula la huella HMAC, cifra el correo con AES y codifica la contraseña con Argon2id antes de persistir.
      *
      * @throws RuntimeException Si el correo ya existe, el rol es inválido o no existe en la base de datos.
      */
     @Override
     public UsuarioModel save(UsuarioModel entity) {
+        PasswordPolicy.requireStrong(entity.getContraseña());
         if (repository.existsByCorreoHMAC(HMACUtil.GenerarHuella(entity.getCorreo()))) {
             throw new RuntimeException("El correo que se registro ya existe");
         }
@@ -137,6 +139,7 @@ public class UsuarioService extends GenericServiceImpl<UsuarioModel, Integer, Us
 
         if (entity.getContraseña() != null && !entity.getContraseña().isBlank()) {
             if (!entity.getContraseña().startsWith("$argon2") && !entity.getContraseña().startsWith("$2")) {
+                PasswordPolicy.requireStrong(entity.getContraseña());
                 entity.setContraseña(passwordEncoder.encode(entity.getContraseña()));
             }
         }
@@ -185,7 +188,7 @@ public class UsuarioService extends GenericServiceImpl<UsuarioModel, Integer, Us
         if (usuarioOpt.isPresent()){
             UsuarioModel usuario = usuarioOpt.get();
             String hash = usuario.getContraseña();
-            if (contrasena != null && (contrasena.length() >= 8 && contrasena.length() <= 16)) {
+            if (contrasena != null && (contrasena.length() >= 8 && contrasena.length() <= 128)) {
                 boolean match = false;
                 boolean upgradeNeeded = false;
 

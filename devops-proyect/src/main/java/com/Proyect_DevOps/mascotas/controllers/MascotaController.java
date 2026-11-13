@@ -6,8 +6,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.Authentication;
 
 import com.Proyect_DevOps.common.controllers.GenericController;
+import com.Proyect_DevOps.common.security.ResourceAccessPolicy;
 import com.Proyect_DevOps.mascotas.dtos.MascotaDTO;
 import com.Proyect_DevOps.mascotas.models.MascotaModel;
 import com.Proyect_DevOps.mascotas.services.MascotaService;
@@ -30,7 +32,8 @@ public class MascotaController extends GenericController<MascotaModel, Integer, 
      * @return Lista de {@link MascotaDTO} de sus mascotas.
      */
     @GetMapping("/{correo:.+@.+}")
-    public List<MascotaDTO> getListMascota(@PathVariable String correo) {
+    public List<MascotaDTO> getListMascota(@PathVariable String correo, Authentication authentication) {
+        ResourceAccessPolicy.requireUserOrStaff(correo, authentication);
         return service.getAllMascotaByUser(correo);
     }
     
@@ -41,7 +44,8 @@ public class MascotaController extends GenericController<MascotaModel, Integer, 
      * @return Total de mascotas asociadas al usuario.
      */
     @GetMapping("/usuario/{correo:.+}")
-    public long contarMascotasPorUsuario(@PathVariable String correo) {
+    public long contarMascotasPorUsuario(@PathVariable String correo, Authentication authentication) {
+        ResourceAccessPolicy.requireUserOrStaff(correo, authentication);
         return service.getCountMascotasByUser(correo);
     }
 }

@@ -3,15 +3,19 @@ package com.Proyect_DevOps.config;
 import java.util.ArrayList;
 import java.util.HexFormat;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.GrantedAuthority;
@@ -31,8 +35,13 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.oauth2.server.resource.web.access.BearerTokenAccessDeniedHandler;
+import org.springframework.security.oauth2.server.resource.web.BearerTokenAuthenticationEntryPoint;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.access.expression.WebExpressionAuthorizationManager;
+import org.springframework.security.config.Customizer;
 
+import com.Proyect_DevOps.Security.Filter.RateLimitFilter;
 import com.Proyect_DevOps.utilities.AESUtil;
 import com.Proyect_DevOps.utilities.HMACUtil;
 import com.Proyect_DevOps.utilities.JWTTest;
@@ -53,7 +62,10 @@ import jakarta.annotation.PostConstruct;
  * @version 1.0
  */
 @Configuration
+@EnableMethodSecurity
 public class SecurityConfig {
+
+  private static final Logger log = LoggerFactory.getLogger(SecurityConfig.class);
 
   /**
    * Define el codificador Argon2id con parámetros recomendados de Spring Security
@@ -135,20 +147,34 @@ public class SecurityConfig {
    *                   seguridad.
    */
   @Bean
-  public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+  public SecurityFilterChain filterChain(HttpSecurity http, RateLimitFilter rateLimitFilter) throws Exception {
     http
         .csrf(csrf -> csrf.disable())
+        .cors(Customizer.withDefaults())
         .sessionManagement(session -> session
             .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
         .oauth2ResourceServer(oauth2 -> oauth2
             .jwt(jwt -> jwt
                 .jwtAuthenticationConverter(configurarAutenticacion())))
+        .exceptionHandling(exceptions -> exceptions
+            .authenticationEntryPoint((request, response, exception) -> {
+              log.warn("Autenticación rechazada: method={} uri={} remoteAddr={}",
+                  request.getMethod(), request.getRequestURI(), request.getRemoteAddr());
+              new BearerTokenAuthenticationEntryPoint().commence(request, response, exception);
+            })
+            .accessDeniedHandler((request, response, exception) -> {
+              log.warn("Acceso denegado: method={} uri={} remoteAddr={} principal={}",
+                  request.getMethod(), request.getRequestURI(), request.getRemoteAddr(),
+                  request.getUserPrincipal() != null ? request.getUserPrincipal().getName() : "anonymous");
+              new BearerTokenAccessDeniedHandler().handle(request, response, exception);
+            }))
         .authorizeHttpRequests(auth -> auth
             .requestMatchers(HttpMethod.POST, "/usuario/login")
             .permitAll()
 
             .requestMatchers("/usuario/Rol")
-            .permitAll()
+            .hasAuthority("TOKEN_access")
 
             .requestMatchers(HttpMethod.GET, "/usuario/Nombre/**")
             .hasAuthority("TOKEN_access")
@@ -185,6 +211,13 @@ public class SecurityConfig {
             .hasAuthority("TOKEN_access"));
 
     return http.build();
+  }
+
+  @Bean
+  public FilterRegistrationBean<RateLimitFilter> rateLimitFilterRegistration(RateLimitFilter rateLimitFilter) {
+    FilterRegistrationBean<RateLimitFilter> registration = new FilterRegistrationBean<>(rateLimitFilter);
+    registration.setEnabled(false);
+    return registration;
   }
 
   /**
@@ -271,7 +304,7 @@ public class SecurityConfig {
       key = System.getProperty("JWT_SECRET");
     }
     if (key == null || key.isBlank() || !key.matches("[0-9a-fA-F]{64}")) {
-      key = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+      throw new IllegalStateException("JWT_SECRET debe configurarse como una cadena hexadecimal de 64 caracteres");
     }
 
     byte[] keyHex = HexFormat.of().parseHex(key);

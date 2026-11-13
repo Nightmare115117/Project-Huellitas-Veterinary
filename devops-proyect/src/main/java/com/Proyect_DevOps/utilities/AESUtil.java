@@ -40,11 +40,6 @@ public class AESUtil {
     private static final String KEY_ALGORITHM = "AES";
 
     /**
-     * Clave secreta por defecto para entornos CI / test cuando no existe archivo .env.
-     */
-    private static final String DEFAULT_FALLBACK_KEY = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
-
-    /**
      * Clave secreta obtenida a través de la configuración del entorno.
      */
     private static final String KEY = obtenerClave();
@@ -105,10 +100,6 @@ public class AESUtil {
     private static String obtenerClave() {
         String key = obtenerKey();
 
-        if (key == null || key.isBlank() || !key.matches("[0-9a-fA-F]{64}")) {
-            return DEFAULT_FALLBACK_KEY;
-        }
-
         return key;
     }
 
@@ -122,6 +113,9 @@ public class AESUtil {
      */
     public static String encriptar(String dato) {
         try {
+            if (KEY == null || !KEY.matches("[0-9a-fA-F]{64}")) {
+                throw new IllegalStateException("AES_SECRET no está configurado correctamente");
+            }
             byte[] keyHex = HexFormat.of().parseHex(KEY);
             Cipher cipher = Cipher.getInstance(ALGORITHM);
             SecureRandom ivRandom = new SecureRandom();
@@ -153,6 +147,9 @@ public class AESUtil {
      */
     public static String desencriptar(String datoEncriptado) {
         try {
+            if (KEY == null || !KEY.matches("[0-9a-fA-F]{64}")) {
+                throw new IllegalStateException("AES_SECRET no está configurado correctamente");
+            }
             byte[] keyHex = HexFormat.of().parseHex(KEY);
             SecretKeySpec key = new SecretKeySpec(keyHex, KEY_ALGORITHM);
             Cipher cipher = Cipher.getInstance(ALGORITHM);

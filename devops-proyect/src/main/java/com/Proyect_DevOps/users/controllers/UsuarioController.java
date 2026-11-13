@@ -14,9 +14,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.security.core.Authentication;
 
 import com.Proyect_DevOps.bitacora.services.BitacoraService;
 import com.Proyect_DevOps.common.controllers.GenericController;
+import com.Proyect_DevOps.common.security.ResourceAccessPolicy;
+import com.Proyect_DevOps.common.security.TurnstileVerifier;
 import com.Proyect_DevOps.users.models.UsuarioModel;
 import com.Proyect_DevOps.users.services.UsuarioService;
 import com.Proyect_DevOps.utilities.JWTUtil;
@@ -42,6 +45,7 @@ public class UsuarioController extends GenericController<UsuarioModel, Integer, 
      * Servicio de auditoría para registrar intentos de autenticación exitosos y fallidos.
      */
     private final BitacoraService bitacoraService;
+    private final TurnstileVerifier turnstileVerifier;
 
 
     /**
@@ -49,10 +53,15 @@ public class UsuarioController extends GenericController<UsuarioModel, Integer, 
      *
      * @param jwtUtil Utilidad de generación de tokens JWT.
      * @param bitacoraService Servicio opcional para registro de eventos en la bitácora.
+     * @param turnstileVerifier Valida el CAPTCHA antes de procesar las credenciales.
      */
-    public UsuarioController(JWTUtil jwtUtil, @Autowired(required = false) BitacoraService bitacoraService) {
+    public UsuarioController(
+            JWTUtil jwtUtil,
+            @Autowired(required = false) BitacoraService bitacoraService,
+            TurnstileVerifier turnstileVerifier) {
         this.jwtUtil = jwtUtil;
         this.bitacoraService = bitacoraService;
+        this.turnstileVerifier = turnstileVerifier;
     }
 
     /**
@@ -69,10 +78,24 @@ public class UsuarioController extends GenericController<UsuarioModel, Integer, 
     public ResponseEntity<Map<String, Object>> login(@RequestBody Map<String, String> credenciales, HttpServletRequest request) {
         String correo = credenciales.get("correo");
         String contrasena = credenciales.get("contrasena");
+        String captchaToken = credenciales.get("captchaToken");
         if (contrasena == null) {
             contrasena = credenciales.get("contraseña");
         }
         String ip = request != null ? request.getRemoteAddr() : "Desconocida";
+        if (!turnstileVerifier.verify(captchaToken)) {
+            if (bitacoraService != null) {
+                bitacoraService.registrarAccion(
+                    correo != null ? correo : "Anónimo",
+                    "Desconocido",
+                    "LOGIN_FALLIDO",
+                    "Autenticación",
+                    "Verificación CAPTCHA fallida.",
+                    ip
+                );
+            }
+            return ResponseEntity.badRequest().body(Map.of("login", false));
+        }
         try {
             if ((correo != null && contrasena != null) && (!correo.isBlank() && !contrasena.isBlank())) {
                 UsuarioModel usuario = service.validacionDeLogin(correo, contrasena, 0);
@@ -128,13 +151,16 @@ public class UsuarioController extends GenericController<UsuarioModel, Integer, 
 
 
     /**
-     * Endpoint HTTP GET para consultar el identificador del rol asignado a un usuario mediante su correo.
+     * Endpoint HTTP GET para consultar el identificador del rol propio o de un usuario bajo revisión de personal autorizado.
      *
      * @param correo Correo electrónico del usuario enviado como parámetro de consulta.
      * @return {@link ResponseEntity} con código 200 (OK) y el ID del rol o -1 si no fue encontrado.
      */
     @GetMapping("/Rol")
-    public ResponseEntity<Integer> getRol(@RequestParam("correo") String correo) {
+    public ResponseEntity<Integer> getRol(
+            @RequestParam("correo") String correo,
+            Authentication authentication) {
+        ResourceAccessPolicy.requireUserOrStaff(correo, authentication);
         Integer idRol = service.buscarIdRol(correo);
         return ResponseEntity.ok(idRol);
     }
@@ -146,7 +172,10 @@ public class UsuarioController extends GenericController<UsuarioModel, Integer, 
      * @return {@link ResponseEntity} con código 200 (OK) y mapa con el nombre completo del usuario.
      */
     @GetMapping("/Nombre/{correo:.+}")
-    public ResponseEntity<Map<String, String>> getNombre(@PathVariable String correo) {
+    public ResponseEntity<Map<String, String>> getNombre(
+            @PathVariable String correo,
+            Authentication authentication) {
+        ResourceAccessPolicy.requireUserOrStaff(correo, authentication);
         String nombre = service.extraerNombre(correo);
         return ResponseEntity.ok(Map.of("nombre", nombre));
     }

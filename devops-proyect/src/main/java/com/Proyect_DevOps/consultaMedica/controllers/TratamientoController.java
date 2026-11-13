@@ -6,8 +6,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.Authentication;
 
 import com.Proyect_DevOps.common.controllers.GenericController;
+import com.Proyect_DevOps.common.security.ResourceAccessPolicy;
 import com.Proyect_DevOps.consultaMedica.dtos.TratamientoDTO;
 import com.Proyect_DevOps.consultaMedica.models.TratamientoModel;
 import com.Proyect_DevOps.consultaMedica.services.TratamientoService;
@@ -30,7 +32,10 @@ public class TratamientoController extends GenericController<TratamientoModel, I
      * @return Lista de {@link TratamientoDTO} asociados.
      */
     @GetMapping("/usuario/{correo:.+}")
-    public List<TratamientoDTO> getTratamientosPorUsuario(@PathVariable String correo){
+    public List<TratamientoDTO> getTratamientosPorUsuario(
+            @PathVariable String correo,
+            Authentication authentication) {
+        ResourceAccessPolicy.requireUserOrStaff(correo, authentication);
         return service.mostrarTratamientosPorUsuario(correo);
     }
 
@@ -41,7 +46,8 @@ public class TratamientoController extends GenericController<TratamientoModel, I
      * @return Cantidad de tratamientos incompletos.
      */
     @GetMapping("/contar/{correo:.+}")
-    public long contarTratamientosIncompletos(@PathVariable String correo) {
+    public long contarTratamientosIncompletos(@PathVariable String correo, Authentication authentication) {
+        ResourceAccessPolicy.requireUserOrStaff(correo, authentication);
         return service.contarTratamientosIncompletos(correo);
     }
 
@@ -53,7 +59,11 @@ public class TratamientoController extends GenericController<TratamientoModel, I
      * @return Lista de {@link TratamientoDTO} de la mascota.
      */
     @GetMapping("/usuario/{correo:.+}/{idMascota:[0-9]+}")
-    public List<TratamientoDTO> getTratamientosPorUsuarioYMascota(@PathVariable String correo, @PathVariable int idMascota) {
+    public List<TratamientoDTO> getTratamientosPorUsuarioYMascota(
+            @PathVariable String correo,
+            @PathVariable int idMascota,
+            Authentication authentication) {
+        ResourceAccessPolicy.requireUserOrStaff(correo, authentication);
         return service.mostrarTratamientosPorUsuarioYMascota(correo, idMascota);
     }
 }

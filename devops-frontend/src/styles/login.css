@@ -67,6 +67,19 @@
   margin-top: var(--space-2);
 }
 
+.turnstile {
+  display: grid;
+  justify-items: center;
+  min-height: 66px;
+  margin: var(--space-4) 0;
+}
+
+.turnstile__error {
+  color: #b42318;
+  font-size: 14px;
+  text-align: center;
+}
+
 @media (max-width: 900px) {
   .login {
     grid-template-columns: minmax(0, 1fr);

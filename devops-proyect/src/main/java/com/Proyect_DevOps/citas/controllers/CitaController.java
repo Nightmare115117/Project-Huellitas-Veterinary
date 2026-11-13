@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -11,11 +12,13 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.Proyect_DevOps.citas.dtos.CitaDTO;
 import com.Proyect_DevOps.citas.models.CitaModel;
 import com.Proyect_DevOps.citas.services.CitaService;
 import com.Proyect_DevOps.common.controllers.GenericController;
+import com.Proyect_DevOps.common.security.ResourceAccessPolicy;
 
 /**
  * Controlador REST para la gestión de citas veterinarias.
@@ -36,7 +39,8 @@ public class CitaController extends GenericController<CitaModel, Integer, CitaSe
      * @return Cantidad de citas activas agendadas.
      */
     @GetMapping("/usuario/{correo:.+}")
-    public long contarCitasPorUsuario(@PathVariable String correo) {
+    public long contarCitasPorUsuario(@PathVariable String correo, Authentication authentication) {
+        ResourceAccessPolicy.requireUserOrStaff(correo, authentication);
         return service.countByUsuarioCitas(correo);
     }
 
@@ -47,7 +51,8 @@ public class CitaController extends GenericController<CitaModel, Integer, CitaSe
      * @return Lista de {@link CitaDTO} pertenecientes al usuario.
      */
     @GetMapping("/{correo:.+@.+}")
-    public List<CitaDTO> conseguirListaDeCitas(@PathVariable String correo) {
+    public List<CitaDTO> conseguirListaDeCitas(@PathVariable String correo, Authentication authentication) {
+        ResourceAccessPolicy.requireUserOrStaff(correo, authentication);
         return service.getCitasByUser(correo);
     }
 
@@ -59,7 +64,11 @@ public class CitaController extends GenericController<CitaModel, Integer, CitaSe
      * @return Lista de {@link CitaDTO} de la mascota.
      */
     @GetMapping("/{correo:.+@.+}/{idMascota:[0-9]+}")
-    public List<CitaDTO> conseguirListaDeCitasPorMascota(@PathVariable String correo, @PathVariable int idMascota){
+    public List<CitaDTO> conseguirListaDeCitasPorMascota(
+            @PathVariable String correo,
+            @PathVariable int idMascota,
+            Authentication authentication) {
+        ResourceAccessPolicy.requireUserOrStaff(correo, authentication);
         return service.getCitasByUserAndPet(correo, idMascota);
     }
     
@@ -70,7 +79,11 @@ public class CitaController extends GenericController<CitaModel, Integer, CitaSe
      * @return {@link CitaDTO} con la información de la cita persistida.
      */
     @PostMapping("/crear")
-    public CitaDTO crearCita(@RequestBody CitaDTO citaDTO){
+    public CitaDTO crearCita(@RequestBody CitaDTO citaDTO, Authentication authentication) {
+        if (citaDTO == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Datos de la cita requeridos");
+        }
+        ResourceAccessPolicy.requireUserOrStaff(citaDTO.correoCliente(), authentication);
         return service.createCita(citaDTO);
     }
 
@@ -81,12 +94,12 @@ public class CitaController extends GenericController<CitaModel, Integer, CitaSe
      * @return {@link ResponseEntity} con código 200 (OK) y {@code true} si se canceló, o 404 (NOT_FOUND) con el error.
      */
     @PutMapping("/cancelar/{idCita:[0-9]+}") 
-    public ResponseEntity<?> cancelarCita(@PathVariable int idCita) {
-        try {
-            boolean respuesta = service.cancelarCita(idCita);
-            return ResponseEntity.ok(respuesta);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        }
+    public ResponseEntity<?> cancelarCita(@PathVariable int idCita, Authentication authentication) {
+        boolean respuesta = service.cancelarCita(
+            idCita,
+            authentication.getName(),
+            ResourceAccessPolicy.isStaff(authentication)
+        );
+        return ResponseEntity.ok(respuesta);
     }
 }
