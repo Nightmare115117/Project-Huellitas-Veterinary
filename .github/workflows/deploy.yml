@@ -127,6 +127,6 @@ jobs:
           ssh -i ~/.ssh/Dev-Server.pem \
             "${{ secrets.SSH_HOST_NAME }}@${{ secrets.SSH_IP }}" "
               export KUBECONFIG=/home/iron/.kube/config &&
-              kubectl rollout status deployment/backend --timeout=120s &&
+              kubectl rollout status deployment/backend --timeout=300s &&
               kubectl rollout status deployment/frontend --timeout=120s
             "
