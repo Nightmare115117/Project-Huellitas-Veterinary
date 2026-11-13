@@ -21,6 +21,7 @@ import org.springframework.web.client.RestTemplate;
 class TurnstileVerifierTest {
 
     private static final String HOSTNAME = "dev-server.tail223158.ts.net";
+    private static final String CLOUDFLARED_HOSTNAME = "huellitas.example.com";
 
     private RestTemplateBuilder builder;
     private RestTemplate restTemplate;
@@ -33,17 +34,25 @@ class TurnstileVerifierTest {
         when(builder.setConnectTimeout(any(Duration.class))).thenReturn(builder);
         when(builder.setReadTimeout(any(Duration.class))).thenReturn(builder);
         when(builder.build()).thenReturn(restTemplate);
-        verifier = new TurnstileVerifier(builder, true, "server-secret", HOSTNAME);
+        verifier = new TurnstileVerifier(
+                builder, true, "server-secret", HOSTNAME + "," + CLOUDFLARED_HOSTNAME);
     }
 
     @Test
-    void acceptsOnlySuccessfulLoginTokenForExpectedHostname() {
+    void acceptsSuccessfulLoginTokensForEitherExpectedHostname() {
         when(restTemplate.postForObject(
                 eq("https://challenges.cloudflare.com/turnstile/v0/siteverify"),
                 any(HttpEntity.class),
                 eq(TurnstileVerifier.SiteverifyResponse.class)))
                 .thenReturn(new TurnstileVerifier.SiteverifyResponse(true, HOSTNAME, "login"));
 
+        assertTrue(verifier.verify("valid-token"));
+
+        when(restTemplate.postForObject(
+                eq("https://challenges.cloudflare.com/turnstile/v0/siteverify"),
+                any(HttpEntity.class),
+                eq(TurnstileVerifier.SiteverifyResponse.class)))
+                .thenReturn(new TurnstileVerifier.SiteverifyResponse(true, CLOUDFLARED_HOSTNAME, "login"));
         assertTrue(verifier.verify("valid-token"));
     }
 
@@ -85,6 +94,6 @@ class TurnstileVerifierTest {
     @Test
     void requiresSecretAndHostnameWhenEnabled() {
         assertThrows(IllegalStateException.class, () -> new TurnstileVerifier(builder, true, "", HOSTNAME));
-        assertThrows(IllegalStateException.class, () -> new TurnstileVerifier(builder, true, "secret", ""));
+        assertThrows(IllegalStateException.class, () -> new TurnstileVerifier(builder, true, "secret", " , "));
     }
 }

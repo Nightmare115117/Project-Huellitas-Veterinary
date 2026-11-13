@@ -40,6 +40,7 @@ export default function Login() {
   const [codigo, setCodigo] = useState('')
   const [captchaToken, setCaptchaToken] = useState('')
   const [captchaGeneration, setCaptchaGeneration] = useState(0)
+  const captchaRequired = import.meta.env.PROD || Boolean(import.meta.env.VITE_TURNSTILE_SITE_KEY?.trim())
   const navigate = useNavigate()
 
   useSeasonalMusic()
@@ -70,7 +71,7 @@ export default function Login() {
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    if (!temToken && !captchaToken) {
+    if (!temToken && captchaRequired && !captchaToken) {
       void alerts.error('Completa la verificación CAPTCHA antes de continuar.')
       return
     }
@@ -224,7 +225,9 @@ export default function Login() {
             </div>
           </div>
 
-          <TurnstileWidget key={captchaGeneration} onTokenChange={setCaptchaToken} />
+          {captchaRequired && (
+            <TurnstileWidget key={captchaGeneration} onTokenChange={setCaptchaToken} />
+          )}
 
             </>
           )}
@@ -232,7 +235,7 @@ export default function Login() {
           <button
             type="submit"
             className="btn btn--primary btn--block"
-            disabled={enviando || (!temToken && !captchaToken)}
+            disabled={enviando || (!temToken && captchaRequired && !captchaToken)}
           >
             {enviando ? (
               <>
